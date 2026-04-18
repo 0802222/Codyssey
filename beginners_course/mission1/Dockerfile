@@ -1,4 +1,7 @@
-FROM nginx:alpine
-LABEL org.opencontainers.image.title="my-custom-nginx"
+FROM nginx:latest
+
+LABEL maintainer="c08022220523"
+LABEL description="custom nginx image for mission1"
+
 ENV APP_ENV=dev
-COPY site/ /usr/share/nginx/html/ 
+COPY index.html /usr/share/nginx/html/index.html
