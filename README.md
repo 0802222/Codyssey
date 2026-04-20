@@ -766,7 +766,7 @@ AICodyssey 사전 평가가 버튼 클릭 시 Readme.md 를 찾을 수 없다고
 
 ``` text
 
-
+1. 현재 support team 에서 기능 오류 확인중
 
 ```
 
@@ -775,25 +775,40 @@ AICodyssey 사전 평가가 버튼 클릭 시 Readme.md 를 찾을 수 없다고
 ### 문제
 
 ``` text
-
+docker info 출력 내용이 너무 많아
+현재 Docker 데몬이 정상인지, 컨테이너가 잘 돌아가고 있는지
+한눈에 파악하기 어려웠음
 ```
 
 ### 원인 가설
 
 ``` text
-
+OrbStack 환경에서 돌아가는 Docker라 커널/OS 정보가 일반 Linux와 달라 더 낯설게 느껴졌음
 ```
 
 ### 확인
 
 ``` text
-
+- docker info 출력에서 Server 섹션이 존재하고, Server Version이 클라이언트와
+  동일(28.5.2)인 것을 확인해 데몬 자체는 정상 구동 중임을 확인
+- Containers 항목에서 Running: 1, Stopped: 4로 표시되는 것을 보고
+  실제로 컨테이너 1개가 실행 중임을 확인
+- Operating System: OrbStack, OSType: linux, Kernel Version 등이 정상적으로
+  표시되는 것을 통해 OrbStack VM 안에서 Docker가 정상 동작 중임을 확인
 ```
 
 ### 해결 / 대안
 
 ``` text
-
+- docker info에서 '살아있나'를 빠르게 볼 때 확인할 최소 체크포인트를 정리:
+  1) Server / Server Version: 서버 정보가 보이면 데몬은 떠 있는 것
+  2) Containers (Running/Stopped): 현재 컨테이너 동작 여부 파악
+  3) OSType / Operating System / Kernel Version: 어떤 환경에서 도는지 확인.
+  4) 맨 아래 WARNING 라인: 특별한 제약이나 경고 여부 확인
+- 네트워크 이슈가 없는 한 DOCKER_INSECURE_NO_IPTABLES_RAW 경고는
+  OrbStack 환경 특성으로 보고, 문제 발생 시에만 깊게 조사하기로 함
+- 이렇게 '우선 볼 항목 리스트'를 머릿속에 정리하면서
+  이후 docker info를 봐도 상태 판단이 한층 빨라졌다.
 ```
 
 <br>
