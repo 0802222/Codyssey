@@ -706,6 +706,8 @@ hi
 $ c08022220523@c6r7s8 Codyssey % git config --list
 # macOS의 키체인 기능을 통해 깃허브 비밀번호, 토큰을 매번 입력하지않게 설정함
 credential.helper=osxkeychain
+user.name=0802222
+user.email=0802222@naver.com
 core.repositoryformatversion=0
 core.filemode=true
 core.bare=false
@@ -718,6 +720,9 @@ remote.origin.url=http://github.com/0802222/Codyssey.git
 remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
 branch.main.remote=origin
 branch.main.merge=refs/heads/main
+branch.mission1.vscode-merge-base=origin/main
+branch.mission1.remote=origin
+branch.mission1.merge=refs/heads/mission1
 ```
 
 ## 3-10) 보안 및 개인정보
