@@ -543,7 +543,7 @@ $ docker kill <컨테이너 이름> # SIGKILL, 강제 종료
 
 ### 어떤 “기존 베이스(이미지/예시 Dockerfile)”를 선택했는지
   - (A) 웹 서버 베이스 이미지 활용(`NGINX`) + 정적 콘텐츠/설정만 교체
-### 내가 적용한 커스텀 포인트 각각의 목적(간단 요약)
+### 내가 적용한 커스텀 포인트 각각의 목적
   - `FROM nginx:latest`  
     - 검증된 공식 `NGINX 이미지`를 기반으로 사용하여, 기본 웹 서버 기능을 그대로 활용한다.
   - `COPY index.html /usr/share/nginx/html/index.html`  
@@ -624,9 +624,10 @@ $ docker build -t custom-nginx:v1 .
 $ docker run -d -p 8080:80 --name custom-nginx-container custom-nginx:v1
 ```
 
-- 서버 응답 확인 (curl http://localhost:8080)
+### 서버 응답 확인 (curl http://localhost:8080)
+- curl : client url (브라우저를 켜지않고도 cli로 html이나 데이터 내용을 확인 할 수 있음)
     
-아래 주소로 접속하면 컨테이너의 80번 포트(nginx)로 요청이 전달됨
+- 아래 주소로 접속하면 컨테이너의 80번 포트(nginx)로 요청이 전달됨
 
 ``` bash
 $ c08022220523@c6r7s8 mission1 % curl http://localhost:8080
@@ -644,18 +645,45 @@ $ c08022220523@c6r7s8 mission1 % curl http://localhost:8080
 ```
 
 ## 3-8) Docker 바인드 마운트 반영 & 볼륨 영속성 검증
-### 바인드 마운트 반영
-```
-```
-### 볼륨 영속성 검증
+### 바인드 마운트 반영 (실시간 코드 수정 확인)
+- 로컬 호스트의 소스 코드를 컨테이너 내부로 직접 연결하여, 별도의 빌드 과정 없이 변경 사항이 즉시 반영되는지 검증합니다.
 ``` bash
-# 1. 볼륨 생성
+# 1. 로컬에 테스트용 HTML 파일 생성
+$ echo "<h1>바인드 마운트 확인용 파일</h1>" > $(pwd)/index.html
+
+# 2. 바인드 마운트를 사용하여 컨테이너 실행 (로컬의 index.html 파일을 nginx 기본경로에 연결, 외부 8081 포트로 매핑)
+$ docker run -d --name bind-test -p 8081:80 -v $(pwd)/index.html:/usr/share/nginx/html/index.html nginx
+
+# 3. docker ps
+$ c08022220523@c6r7s8 mission1 % docker ps
+CONTAINER ID   IMAGE     COMMAND                   CREATED              STATUS              PORTS                                     NAMES
+2ffecabe8973   nginx     "/docker-entrypoint.…"   About a minute ago   Up About a minute   0.0.0.0:8081->80/tcp, [::]:8081->80/tcp   bind-test
+
+# 4. 초기 응답 확인 (curl)
+$ c08022220523@c6r7s8 mission1 % curl http://localhost:8081
+<h1>바인드 마운트 확인용 파일</h1>
+
+# 5. 로컬에서 파일 내용 수정 (컨테이너 재시작 없음)
+$ echo "<h1>바인드 마운트 확인용-수정되었습니다.</h1>" > $(pwd)/index.html
+
+# 6. 변경 사항 즉시 반영 확인 (curl) 별도의 docker build나 restart 없이도 내용이 바뀐 것을 확인할 수 있다.
+$ c08022220523@c6r7s8 mission1 % curl http://localhost:8081
+<h1>바인드 마운트 확인용-수정되었습니다.</h1>
+```
+### 볼륨 영속성 검증 (컨테이너가 사라져도 데이터는 남음)
+``` bash
+# 1. 볼륨 생성 (데이터 저장용도)
 $ docker volume create mydata
 
 # 2. 컨테이너-1 실행
+## 내가 만든 mydata 볼륨과 컨테이너의 /data 폴더와 마운트
+## sleep infinity : ubuntu같은 이미지는 실행할 명령이 없으면 바로 종료되기 때문에, 꺼지지 않게 무한대기 시킴
+
 $ docker run -d --name vol-test -v mydata:/data ubuntu sleep infinity
 
 # 3. 컨테이너-1 안에서 볼륨에 데이터 쓰기/읽기
+## exec : 이미 실행중인 컨테이너에 들어가서 추가 명령을 내릴 때 사용
+## -it : 터미널 대화하듯 명령을 주고받음
 $ docker exec -it vol-test bash -lc "echo hi > /data/hello.txt && cat /data/hello.txt"
 hi
 
@@ -671,19 +699,30 @@ hi
 ```
 
 ## 3-9) Git 설정 및 GitHub 연동
+- Git 의 설정 상태를 확인
 ``` bash
+# git congif --list
+
 $ c08022220523@c6r7s8 Codyssey % git config --list
+# macOS의 키체인 기능을 통해 깃허브 비밀번호, 토큰을 매번 입력하지않게 설정함
 credential.helper=osxkeychain
+user.name=0802222
+user.email=0802222@naver.com
 core.repositoryformatversion=0
 core.filemode=true
 core.bare=false
 core.logallrefupdates=true
 core.ignorecase=true
 core.precomposeunicode=true
+
+# 어떤 저장소와 연결되어 있는지
 remote.origin.url=http://github.com/0802222/Codyssey.git
 remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
 branch.main.remote=origin
 branch.main.merge=refs/heads/main
+branch.mission1.vscode-merge-base=origin/main
+branch.mission1.remote=origin
+branch.mission1.merge=refs/heads/mission1
 ```
 
 ## 3-10) 보안 및 개인정보
