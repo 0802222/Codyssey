@@ -36,20 +36,19 @@
 ``` bash
 # sw_vers
 
-$ c08022220523@c6r7s8 Codyssey % sw_vers
+c08022220523@c6r7s8 Codyssey % sw_vers
 ProductName:            macOS
 ProductVersion:         15.7.4
 BuildVersion:           24G517
 ```
 
-### Shell: bash
+### Shell: zsh
 
 ``` bash
-# bash
+# zsh
 
-$ c08022220523@c6r7s8 Codyssey % bash --version
-GNU bash, version 3.2.57(1)-release (x86_64-apple-darwin24)
-Copyright (C) 2007 Free Software Foundation, Inc.
+c08022220523@c6r7s8 Codyssey % echo $SHELL
+/bin/zsh
 ```
 
 ### Docker: 28.5.2
@@ -57,7 +56,7 @@ Copyright (C) 2007 Free Software Foundation, Inc.
 ``` bash
 # docker --version
 
-$ c08022220523@c6r7s8 Codyssey % docker --version
+c08022220523@c6r7s8 Codyssey % docker --version
 Docker version 28.5.2, build ecc6942
 ```
 
@@ -66,7 +65,7 @@ Docker version 28.5.2, build ecc6942
 ``` bash
 # git --version
 
-$ c08022220523@c6r7s8 Codyssey % git --version
+c08022220523@c6r7s8 Codyssey % git --version
 git version 2.53.0
 ```
 
@@ -99,7 +98,7 @@ git version 2.53.0
 ``` bash $
 # pwd
 
-$ c08022220523@c6r7s8 Codyssey % pwd
+c08022220523@c6r7s8 Codyssey % pwd
 /Users/08022220523/Documents/Codyssey
 ```
 
@@ -108,7 +107,7 @@ $ c08022220523@c6r7s8 Codyssey % pwd
 ``` bash $
 # ls -a
 
-$ c08022220523@c6r7s8 Desktop % ls -a
+c08022220523@c6r7s8 Codyssey % ls -a
 .  ..  .DS_Store .localized
 ```
 
@@ -117,7 +116,7 @@ $ c08022220523@c6r7s8 Desktop % ls -a
 ``` bash $
 # cd
 
-$ c08022220523@c6r7s8 Desktop % cd testDir
+c08022220523@c6r7s8 Codyssey % cd testDir
 ```
 
 ### 생성
@@ -125,9 +124,9 @@ $ c08022220523@c6r7s8 Desktop % cd testDir
 ``` bash $
 # touch test.txt
 
-$ c08022220523@c6r7s8 Desktop % touch test.txt
+c08022220523@c6r7s8 Codyssey % touch test.txt
 
-$ c08022220523@c6r7s8 Desktop % ls
+c08022220523@c6r7s8 Codyssey % ls
 test.txt
 ```
 
@@ -136,9 +135,9 @@ test.txt
 ``` bash $
 # cp <기존 파일명> <복사할 위치/파일명>
 
-$ c08022220523@c6r7s8 Desktop % cp test.txt test-copy.txt
+c08022220523@c6r7s8 Codyssey % cp test.txt test-copy.txt
 
-$ c08022220523@c6r7s8 Desktop % ls
+c08022220523@c6r7s8 Codyssey % ls
 test-copy.txt test.txt testDir
 ```
 
@@ -147,9 +146,9 @@ test-copy.txt test.txt testDir
 ``` bash $
 # mv <기존 파일명> <변경/이동할 파일명>
 
-$ c08022220523@c6r7s8 Desktop % mv test-copy.txt test-new.txt
+c08022220523@c6r7s8 Codyssey % mv test-copy.txt test-new.txt
 
-$ c08022220523@c6r7s8 Desktop % ls
+c08022220523@c6r7s8 Codyssey % ls
 test-new.txt test.txt testDir
 ```
 
@@ -158,18 +157,18 @@ test-new.txt test.txt testDir
 ``` bash $
 # rm
 
-$ c08022220523@c6r7s8 Desktop % rm test-new.txt
+c08022220523@c6r7s8 Codyssey % rm test-new.txt
 
-$ c08022220523@c6r7s8 Desktop % ls
+c08022220523@c6r7s8 Codyssey % ls
 test.txt testDir
 ```
 
 ### 파일 내용 확인
 
-``` bash $
+``` bash
 # cat
 
-$ c08022220523@c6r7s8 Desktop % cat test.txt
+c08022220523@c6r7s8 Codyssey % cat test.txt
 test 파일의 내용 입니다.
 ```
 
@@ -178,15 +177,19 @@ test 파일의 내용 입니다.
 ``` bash $
 # touch
 
-$ c08022220523@c6r7s8 Desktop % touch emptyfile.txt
+c08022220523@c6r7s8 Codyssey % touch emptyfile.txt
 
-$ c08022220523@c6r7s8 Desktop % ls
+c08022220523@c6r7s8 Codyssey % ls
 emptyfile.txt test.txt testDir
 
-$ c08022220523@c6r7s8 Desktop % cat emptyfile.txt
+c08022220523@c6r7s8 Codyssey % cat emptyfile.txt
 # 출력 없음 (빈 파일)
 
 ```
+
+<br>
+<br>
+<br>
 
 ## 3-2) 권한 실습 및 증거 기록
 
@@ -194,7 +197,7 @@ $ c08022220523@c6r7s8 Desktop % cat emptyfile.txt
 
 ``` bash $
 # 권한 확인 (변경 전)
-$ c08022220523@c6r7s8 Desktop % ls -al
+c08022220523@c6r7s8 Codyssey % ls -al
   total 16
   drwx------+  6 c08022220523  c08022220523   192  4 18 16:02 .
   drwxr-x---+ 20 c08022220523  c08022220523   640  4 18 15:58 ..
@@ -208,13 +211,13 @@ $ c08022220523@c6r7s8 Desktop % ls -al
 
 ``` bash $
 # 소유자에게 실행 권한 추가
-$ c08022220523@c6r7s8 Desktop % chmod u+x test.txt
+c08022220523@c6r7s8 Codyssey % chmod u+x test.txt
 
 # 기타사용자에게 실행 권한 제거
-$ c08022220523@c6r7s8 Desktop % chmod o-x testDir
+c08022220523@c6r7s8 Codyssey % chmod o-x testDir
 
 # 권한 확인 (변경 후)
-$ c08022220523@c6r7s8 Desktop % ls -al           
+c08022220523@c6r7s8 Codyssey % ls -al           
 total 16
 drwx------+  6 c08022220523  c08022220523   192  4 18 16:02 .
 drwxr-x---+ 20 c08022220523  c08022220523   640  4 18 15:58 ..
@@ -224,6 +227,10 @@ drwxr-x---+ 20 c08022220523  c08022220523   640  4 18 15:58 ..
 drwxr-xr--   2 c08022220523  c08022220523    64  4 18 16:02 testDir
 ```
 
+<br>
+<br>
+<br>
+
 ## 3-3) Docker 설치 및 기본 점검
 
 ### Docker 버전 확인 결과
@@ -231,7 +238,7 @@ drwxr-xr--   2 c08022220523  c08022220523    64  4 18 16:02 testDir
 ``` bash $
 # docker --version
 
-$ c08022220523@c6r7s8 Codyssey % docker --version
+c08022220523@c6r7s8 Codyssey % docker --version
 Docker version 28.5.2, build ecc6942
 ```
 
@@ -240,7 +247,7 @@ Docker version 28.5.2, build ecc6942
 ``` bash $
 # docker info
 
-$ c08022220523@c6r7s8 Desktop % docker info
+c08022220523@c6r7s8 Codyssey % docker info
 Client:
 Version:    28.5.2
 Context:    orbstack
@@ -355,30 +362,103 @@ buildx: Docker Buildx (Docker Inc.)
      WARNING: DOCKER_INSECURE_NO_IPTABLES_RAW is set
 </details>
 
+<br>
+<br>
+<br>
+
 ## 3-4) Docker 기본 운영 명령 수행
 ### 이미지: 다운로드/목록 확인
 
 ``` bash $
-# docker images
+# docker pull (이미지 다운로드)
 
-$ c08022220523@c6r7s8 Desktop % docker images
-REPOSITORY   TAG       IMAGE ID   CREATED   SIZE
+c08022220523@c6r7s8 Codyssey % docker pull nginx 
+Using default tag: latest
+latest: Pulling from library/nginx
+Digest: sha256:7f0adca1fc6c29c8dc49a2e90037a10ba20dc266baaed0988e9fb4d0d8b85ba0
+Status: Image is up to date for nginx:latest
+docker.io/library/nginx:latest
+```
+
+``` bash $
+# docker images (로컬 이미지 목록 확인)
+
+c08022220523@c6r7s8 Codyssey % docker images
+REPOSITORY     TAG       IMAGE ID       CREATED       SIZE
+my-web         1.0       9c2a35da41f7   3 days ago    161MB
+custom-nginx   v1        b3c704709af4   3 days ago    161MB
+ubuntu         latest    0b1ebe5dd426   11 days ago   78.1MB
+nginx          latest    a716c9c12c38   13 days ago   161MB
+hello-world    latest    e2ac70e7319a   4 weeks ago   10.1kB
+```
+
+``` bash $
+# docker buid (Dockerfile 로 이미지 빌드)
+
+c08022220523@c6r7s8 Codyssey % docker build -t custom-nginx:v1 .
+[+] Building 1.1s (7/7) FINISHED                                docker:orbstack
+ => [internal] load build definition from Dockerfile                       0.2s
+ => => transferring dockerfile: 207B                                       0.0s
+ => [internal] load metadata for docker.io/library/nginx:latest            0.0s
+ => [internal] load .dockerignore                                          0.1s
+ => => transferring context: 2B                                            0.0s
+ => [internal] load build context                                          0.1s
+ => => transferring context: 99B                                           0.0s
+ => CACHED [1/2] FROM docker.io/library/nginx:latest                       0.0s
+ => [2/2] COPY index.html /usr/share/nginx/html/index.html                 0.2s
+ => exporting to image                                                     0.2s
+ => => exporting layers                                                    0.1s
+ => => writing image sha256:5fcaf48103d591039978ecbb835a242fd20c0a59653a6  0.0s
+ => => naming to docker.io/library/custom-nginx:v1    
+
+``` bash $
+# docker run (실행)
+
+c08022220523@c6r7s8 Codyssey % docker run -d --name my-nginx -p 8080:80 nginx
+aa4ab1a49bedcbe0133e161c04087c66b28fdb83cfb0ac4c9f604b780df1832f
 ```
 
 ### 컨테이너: 실행/중지/목록 확인
 
 ``` bash $
-# docker ps
+# docker ps (실행중인 컨테이너 확인)
 
-$ c08022220523@c6r7s8 Codyssey % docker ps
-CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+c08022220523@c6r7s8 Codyssey % docker ps
+CONTAINER ID   IMAGE     COMMAND            CREATED         STATUS        PORTS     NAMES
+90e6c90ae20b   ubuntu    "sleep infinity"   2 seconds ago   Up 1 second 
 ```
 
 ``` bash $
-# docker ps -a
+# docker stop (안전 종료)
 
-$ c08022220523@c6r7s8 Desktop % docker ps -a
-CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+c08022220523@c6r7s8 Codyssey % docker stop e0b9ff9187dd
+e0b9ff9187dd
+```
+
+``` bash $
+# docker kill (강제 종료)
+
+c08022220523@c6r7s8 Codyssey % docker kill 90e6c90ae20b
+90e6c90ae20b
+```
+
+``` bash $
+# docker rm (삭제)
+
+c08022220523@c6r7s8 Codyssey % docker rm 90e6c90ae20b
+90e6c90ae20b
+```
+
+``` bash $
+# docker ps -a (중지된 컨테이너까지 모두 확인)
+
+c08022220523@c6r7s8 Codyssey % docker ps -a                                                 
+CONTAINER ID   IMAGE          COMMAND                   CREATED          STATUS                  PORTS                                     NAMES
+aa4ab1a49bed   nginx          "/docker-entrypoint.…"   11 minutes ago   Up 11 minutes           0.0.0.0:8080->80/tcp, [::]:8080->80/tcp   my-nginx
+8b085a8657bb   my-web:1.0     "/docker-entrypoint.…"   2 days ago       Created                                                           my-web-8080
+4e85902eda75   b3c704709af4   "/docker-entrypoint.…"   3 days ago       Exited (0) 2 days ago                                             custom-nginx-container
+a3cc35a72b5e   ubuntu         "/bin/bash"               3 days ago       Exited (0) 3 days ago                                             wonderful_hugle
+c995dfea2517   hello-world    "/hello"                  3 days ago       Exited (0) 3 days ago                                             recursing_leavitt
 ```
 
 
@@ -386,7 +466,7 @@ CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
 
 ``` bash $
 # docker logs
-$ c08022220523@c6r7s8 mission1 % docker logs custom-nginx-container
+c08022220523@c6r7s8 Codyssey % docker logs custom-nginx-container
 ```
 
 <details>
@@ -425,11 +505,15 @@ $ c08022220523@c6r7s8 mission1 % docker logs custom-nginx-container
 ``` bash $
 # docker stats
 
-$ c08022220523@c6r7s8 mission1 % docker stats
+c08022220523@c6r7s8 Codyssey % docker stats
 CONTAINER ID   NAME                     CPU %     MEM USAGE / LIMIT    MEM %     NET I/O           BLOCK I/O         PIDS 
 4e85902eda75   custom-nginx-container   0.00%     5.18MiB / 15.67GiB   0.03%     4.51kB / 2.87kB   27.8MB / 8.19kB   7 
 
 ```
+
+<br>
+<br>
+<br>
 
 ### 3-5) Dockerfile 기반 웹 서버 컨테이너
 
@@ -437,7 +521,7 @@ CONTAINER ID   NAME                     CPU %     MEM USAGE / LIMIT    MEM %    
 
 ``` bash $
 # docker run hello-world
-$ c08022220523@c6r7s8 Desktop % docker run hello-world
+c08022220523@c6r7s8 Codyssey % docker run hello-world
 ```
 <details>
     <summary>hello-world 실행</summary>
@@ -472,17 +556,19 @@ $ c08022220523@c6r7s8 Desktop % docker run hello-world
 
 ```
 # docker ps -a
-$ c08022220523@c6r7s8 Desktop % docker ps -a
+c08022220523@c6r7s8 Codyssey % docker ps -a
 
 CONTAINER ID   IMAGE         COMMAND    CREATED          STATUS                      PORTS     NAMES
 c995dfea2517   hello-world   "/hello"   13 seconds ago   Exited (0) 12 seconds ago             recursing_leavitt
 ```
 
+<br>
+
 ### ubuntu 컨테이너를 실행하고 내부 진입 후 간단 명령(예: ls, echo) 수행 결과를 기록한다.
 
 ``` bash $
 # docker run ubuntu
-$ c08022220523@c6r7s8 Desktop % docker run ubuntu
+c08022220523@c6r7s8 Codyssey % docker run ubuntu
 
 Unable to find image 'ubuntu:latest' locally
 latest: Pulling from library/ubuntu
@@ -491,14 +577,14 @@ Digest: sha256:c4a8d5503dfb2a3eb8ab5f807da5bc69a85730fb49b5cfca2330194ebcc41c7b
 Status: Downloaded newer image for ubuntu:latest
 
 #docker ps -a
-$ c08022220523@c6r7s8 Desktop % docker ps -a
+c08022220523@c6r7s8 Codyssey % docker ps -a
 
 CONTAINER ID   IMAGE         COMMAND       CREATED         STATUS                     PORTS     NAMES
 a3cc35a72b5e   ubuntu        "/bin/bash"   9 seconds ago   Exited (0) 8 seconds ago             wonderful_hugle
 c995dfea2517   hello-world   "/hello"      2 minutes ago   Exited (0) 2 minutes ago             recursing_leavitt
 
 # ubuntu 내부 진입
-$ c08022220523@c6r7s8 Desktop % docker run -it ubuntu
+c08022220523@c6r7s8 Codyssey % docker run -it ubuntu
 
 # ubuntu 내부 - 명령어 ls
 $ root@8458d01297f3:/# ls
@@ -509,10 +595,15 @@ boot  etc  lib   media  opt  root  sbin  sys  usr
 $ root@8458d01297f3:/# echo "hi"
 hi
 ```
-
+<br>
 
 ### 컨테이너 종료/유지(attach/exec 등)의 차이를 스스로 관찰하고 간단히 정리한다.
-
+- `attach` : 컨테이너의 메인 프로세스(PID 1)에 내 터미널의 stdin/stdout/stderr 를 연결
+    - 이미 돌아가는 프로세스에 붙는 용도
+    - 메인 프로세스에 직접 붙어서 로그 보고싶을때, 컨테이너가 아예 쉘로만 떠 있는 개발용 환경에서만 가끔 쓴다.
+- `exec` : 컨테이너 안에서 새 명령/새 프로세스 실행
+    - 실행중인 컨티에너 안에 새 프로세서를 하나 더 만드는 용도
+    - 대부분의 디버깅이나 조작은 `docker exec -ic <컨테이너> bash` 나 `sh` 로 들어가서 하는걸 권장한다.
 ``` bash $
 # 컨테이너는 호스트 쉘에서 다루거나, 컨테이너 내부로 진입해서 다룬다. 이를 나눠서 설명하겠다.
 
@@ -539,10 +630,17 @@ $ docker kill <컨테이너 이름> # SIGKILL, 강제 종료
 
 ```
 
+<br>
+<br>
+<br>
+
 ### 3-6) 기존 Dockerfile 기반 커스텀 이미지 제작
 
 ### 어떤 “기존 베이스(이미지/예시 Dockerfile)”를 선택했는지
   - (A) 웹 서버 베이스 이미지 활용(`NGINX`) + 정적 콘텐츠/설정만 교체
+
+<br>
+
 ### 내가 적용한 커스텀 포인트 각각의 목적
   - `FROM nginx:latest`  
     - 검증된 공식 `NGINX 이미지`를 기반으로 사용하여, 기본 웹 서버 기능을 그대로 활용한다.
@@ -551,68 +649,56 @@ $ docker kill <컨테이너 이름> # SIGKILL, 강제 종료
   - `LABEL maintainer`, `LABEL description`  
     - 이미지 메타데이터를 추가해 이미지의 목적과 작성자를 식별하기 쉽게 한다.
 - 핵심 결과(출력/스크린샷)
-    - ![alt text](../mission1/dockerfile custom image.png)
+    ![Dockerfile build 결과](./images/dockerfile%20custom%20image.png)
 ### 빌드/실행 명령
-```bash
+``` bash
 # docker build
-$ c08022220523@c6r7s8 mission1 % docker build -t custom-nginx:v1 .
+
+c08022220523@c6r7s8 Codyssey % docker build -t custom-nginx:v1 .
 ```
 
 <details>
     <summary>docker build - console log</summary>
         
-    [+] Building 8.4s (7/7) FINISHED                                docker:orbstack
-    => [internal] load build definition from Dockerfile                       0.2s
-    => => transferring dockerfile: 176B                                       0.0s
-    => [internal] load metadata for docker.io/library/nginx:latest            2.8s
+    [+] Building 0.5s (7/7) FINISHED                                docker:orbstack
+    => [internal] load build definition from Dockerfile                       0.1s
+    => => transferring dockerfile: 207B                                       0.0s
+    => [internal] load metadata for docker.io/library/nginx:latest            0.0s
     => [internal] load .dockerignore                                          0.1s
     => => transferring context: 2B                                            0.0s
-    => [internal] load build context                                          0.2s
-    => => transferring context: 297B                                          0.0s
-    => [1/2] FROM docker.io/library/nginx:latest@sha256:7f0adca1fc6c29c8dc49  4.4s
-    => => resolve docker.io/library/nginx:latest@sha256:7f0adca1fc6c29c8dc49  0.2s
-    => => sha256:7f0adca1fc6c29c8dc49a2e90037a10ba20dc266b 10.23kB / 10.23kB  0.0s
-    => => sha256:f1e4ce3095f46ab65fd053991508a2433e2d7b45f6d 2.29kB / 2.29kB  0.0s
-    => => sha256:a716c9c12c382ab51a71127f1dd9440af118939b92a 9.09kB / 9.09kB  0.0s
-    => => sha256:5435b2dcdf5cb7faa0d5b1d4d54be2c72a776fab9 29.78MB / 29.78MB  0.9s
-    => => sha256:054715a6bffa715b31d05aa5cf6aac8423bd97a19 33.16MB / 33.16MB  1.3s
-    => => sha256:88d1d984b765ca06bdffb2c450ede950034501dad795362 628B / 628B  1.0s
-    => => extracting sha256:5435b2dcdf5cb7faa0d5b1d4d54be2c72a776fab9a605336  1.1s
-    => => sha256:84e114c2bb367b07ccb9aff4dbc37d7a0f119884219f2ef 404B / 404B  1.5s
-    => => sha256:4a038fd18db12b39452e6f5f883577e987b3ff96e8e5553 955B / 955B  1.4s
-    => => sha256:7b5d674621c2c637ede5eb94b8ac1a844d84d9231ae 1.21kB / 1.21kB  1.8s
-    => => sha256:448ea5cac5d5181193a0d6e6106ea1673e3713f929b 1.40kB / 1.40kB  1.9s
-    => => extracting sha256:054715a6bffa715b31d05aa5cf6aac8423bd97a1981d1d69  0.7s
-    => => extracting sha256:88d1d984b765ca06bdffb2c450ede950034501dad7953624  0.0s
-    => => extracting sha256:4a038fd18db12b39452e6f5f883577e987b3ff96e8e55537  0.0s
-    => => extracting sha256:84e114c2bb367b07ccb9aff4dbc37d7a0f119884219f2efc  0.0s
-    => => extracting sha256:7b5d674621c2c637ede5eb94b8ac1a844d84d9231ae61df7  0.0s
-    => => extracting sha256:448ea5cac5d5181193a0d6e6106ea1673e3713f929b4bb91  0.0s
-    => [2/2] COPY index.html /usr/share/nginx/html/index.html                 0.4s
-    => exporting to image                                                     0.2s
-    => => exporting layers                                                    0.1s
-    => => writing image sha256:b3c704709af4b3c425eda65875704687ce9587fa281ba  0.0s
+    => [internal] load build context                                          0.1s
+    => => transferring context: 31B                                           0.0s
+    => [1/2] FROM docker.io/library/nginx:latest                              0.0s
+    => CACHED [2/2] COPY index.html /usr/share/nginx/html/index.html          0.0s
+    => exporting to image                                                     0.1s
+    => => exporting layers                                                    0.0s
+    => => writing image sha256:5fcaf48103d591039978ecbb835a242fd20c0a59653a6  0.0s
     => => naming to docker.io/library/custom-nginx:v1                         0.0s
 </details>
 
 ``` bash
 # docker run
-$ c08022220523@c6r7s8 mission1 % docker run -d --name custom-nginx-container -p 8080:80 custom-nginx:v1
-4e85902eda758b756713ee26c966d3807cfbd1ad1278bf8a9f0735da147602cf
+
+c08022220523@c6r7s8 Codyssey % docker run -d --name custom-nginx-container -p 8080:80 custom-nginx:v1
+67da84bf0671cc4303e3fdfa3307b2cb119cc9130519fd3e23b55f2c8c3856c3
 ```
 
 ``` bash
 # docker ps
-$ c08022220523@c6r7s8 mission1 % docker ps
-CONTAINER ID   IMAGE             COMMAND                   CREATED         STATUS         PORTS                                     NAMES
-4e85902eda75   custom-nginx:v1   "/docker-entrypoint.…"   4 seconds ago   Up 3 seconds   0.0.0.0:8080->80/tcp, [::]:8080->80/tcp   custom-nginx-container
+
+c08022220523@c6r7s8 Codyssey % docker ps
+CONTAINER ID   IMAGE             COMMAND                   CREATED          STATUS          PORTS                                     NAMES
+67da84bf0671   custom-nginx:v1   "/docker-entrypoint.…"   25 seconds ago   Up 24 seconds   0.0.0.0:8080->80/tcp, [::]:8080->80/tcp   custom-nginx-container
 ```
 
-      
+<br>
+<br>
+<br>
+
 
 ## 3-7) 포트 매핑 및 접속 증거
 ### 포트 매핑
-```bash
+``` bash
 # 1. docker build (이미 custom image 제작 시 수행함)
 $ docker build -t custom-nginx:v1 .
 
@@ -624,13 +710,15 @@ $ docker build -t custom-nginx:v1 .
 $ docker run -d -p 8080:80 --name custom-nginx-container custom-nginx:v1
 ```
 
+<br>
+
 ### 서버 응답 확인 (curl http://localhost:8080)
 - curl : client url (브라우저를 켜지않고도 cli로 html이나 데이터 내용을 확인 할 수 있음)
     
 - 아래 주소로 접속하면 컨테이너의 80번 포트(nginx)로 요청이 전달됨
 
 ``` bash
-$ c08022220523@c6r7s8 mission1 % curl http://localhost:8080
+c08022220523@c6r7s8 Codyssey % curl http://localhost:8080
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -644,6 +732,10 @@ $ c08022220523@c6r7s8 mission1 % curl http://localhost:8080
 </html>%
 ```
 
+<br>
+<br>
+<br>
+
 ## 3-8) Docker 바인드 마운트 반영 & 볼륨 영속성 검증
 ### 바인드 마운트 반영 (실시간 코드 수정 확인)
 - 로컬 호스트의 소스 코드를 컨테이너 내부로 직접 연결하여, 별도의 빌드 과정 없이 변경 사항이 즉시 반영되는지 검증합니다.
@@ -655,21 +747,24 @@ $ echo "<h1>바인드 마운트 확인용 파일</h1>" > $(pwd)/index.html
 $ docker run -d --name bind-test -p 8081:80 -v $(pwd)/index.html:/usr/share/nginx/html/index.html nginx
 
 # 3. docker ps
-$ c08022220523@c6r7s8 mission1 % docker ps
+c08022220523@c6r7s8 Codyssey % docker ps
 CONTAINER ID   IMAGE     COMMAND                   CREATED              STATUS              PORTS                                     NAMES
 2ffecabe8973   nginx     "/docker-entrypoint.…"   About a minute ago   Up About a minute   0.0.0.0:8081->80/tcp, [::]:8081->80/tcp   bind-test
 
 # 4. 초기 응답 확인 (curl)
-$ c08022220523@c6r7s8 mission1 % curl http://localhost:8081
+c08022220523@c6r7s8 Codyssey % curl http://localhost:8081
 <h1>바인드 마운트 확인용 파일</h1>
 
 # 5. 로컬에서 파일 내용 수정 (컨테이너 재시작 없음)
 $ echo "<h1>바인드 마운트 확인용-수정되었습니다.</h1>" > $(pwd)/index.html
 
 # 6. 변경 사항 즉시 반영 확인 (curl) 별도의 docker build나 restart 없이도 내용이 바뀐 것을 확인할 수 있다.
-$ c08022220523@c6r7s8 mission1 % curl http://localhost:8081
+c08022220523@c6r7s8 Codyssey % curl http://localhost:8081
 <h1>바인드 마운트 확인용-수정되었습니다.</h1>
 ```
+
+<br>
+
 ### 볼륨 영속성 검증 (컨테이너가 사라져도 데이터는 남음)
 ``` bash
 # 1. 볼륨 생성 (데이터 저장용도)
@@ -698,32 +793,40 @@ $ docker exec -it vol-test2 bash -lc "cat /data/hello.txt"
 hi
 ```
 
+<br>
+<br>
+<br>
+
 ## 3-9) Git 설정 및 GitHub 연동
-- Git 의 설정 상태를 확인
-``` bash
-# git congif --list
+- GitHub 연동 결과
+![GitHub 연동 결과](./images/github%20연동%20캡쳐.png)
 
-$ c08022220523@c6r7s8 Codyssey % git config --list
-# macOS의 키체인 기능을 통해 깃허브 비밀번호, 토큰을 매번 입력하지않게 설정함
-credential.helper=osxkeychain
-user.name=0802222
-user.email=0802222@naver.com
-core.repositoryformatversion=0
-core.filemode=true
-core.bare=false
-core.logallrefupdates=true
-core.ignorecase=true
-core.precomposeunicode=true
+- Git 의 설정 상태를 확인 (git config)
+    ``` bash
+    # git congif --list
 
-# 어떤 저장소와 연결되어 있는지
-remote.origin.url=http://github.com/0802222/Codyssey.git
-remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
-branch.main.remote=origin
-branch.main.merge=refs/heads/main
-branch.mission1.vscode-merge-base=origin/main
-branch.mission1.remote=origin
-branch.mission1.merge=refs/heads/mission1
-```
+    c08022220523@c6r7s8 Codyssey % git config --list
+    # macOS의 키체인 기능을 통해 깃허브 비밀번호, 토큰을 매번 입력하지않게 설정함
+    credential.helper=osxkeychain
+    user.name=0802222
+    user.email=0802222@naver.com
+    core.repositoryformatversion=0
+    core.filemode=true
+    core.bare=false
+    core.logallrefupdates=true
+    core.ignorecase=true
+    core.precomposeunicode=true
+
+    # 어떤 저장소와 연결되어 있는지
+    remote.origin.url=http://github.com/0802222/Codyssey.git
+    remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
+    branch.main.remote=origin
+    branch.main.merge=refs/heads/main
+    branch.mission1.vscode-merge-base=origin/main
+    branch.mission1.remote=origin
+    branch.mission1.merge=refs/heads/mission1
+    ```
+    ![GitHub 연동 결과](./images/git%20config%20결과.png)
 
 ## 3-10) 보안 및 개인정보
   ### [x] 토큰, 비밀번호, 개인키, 인증코드 등이 포함되지 않도록 마스킹한다.
