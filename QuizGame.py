@@ -1,3 +1,4 @@
+import datetime
 import os
 import json
 import random
@@ -8,8 +9,11 @@ from Quiz import Quiz, DEFAULT_QUIZZES
 class QuizGame:
 
     def __init__(self):
-        self.quizzes = []       # Quiz 목록
-        self.best_score = 0     # 최고 점수 (0~100)
+        self.quizzes = []          
+        self.best_score = 0        
+        self.best_score_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.nickname = ""         
+        self.best_nickname = ""   
         self.load_state()
 
 
@@ -37,6 +41,12 @@ class QuizGame:
             
             # best_score 키의 값을 정수로 변환하여 self.best_score에 저장, 없으면 0으로 초기화
             self.best_score = int(data.get("best_score", 0))
+
+            # best_nickname 키의 값을 문자열로 변환하여 self.best_nickname에 저장, 없으면 빈 문자열로 초기화
+            self.best_nickname = str(data.get("best_nickname", ""))
+
+            # best_score_date 키의 값을 문자열로 변환하여 self.best_score_date에 저장, 없으면 빈 문자열로 초기화
+            self.best_score_date = str(data.get("best_score_date", ""))
             
             print(
                 f"📂 저장된 데이터를 불러왔습니다. "
@@ -70,11 +80,12 @@ class QuizGame:
 
 
     # 퀴즈와 최고 점수를 state.json에 저장
-    def save_state(self):
+    def save_state(self, nickname=""):
     
         data = {
             "quizzes": [q.to_dict() for q in self.quizzes],
-            "best_score": self.best_score
+            "best_score": self.best_score,
+            "best_nickname": self.best_nickname
         }
 
         # JSON 파일로 저장
@@ -93,22 +104,44 @@ class QuizGame:
     # 최고 점수 출력
     def show_score(self):
         
-        print("\n" + "=" * 40)
+        print("\n" + "=" * 30)
         if self.best_score == 0:
             print("아직 퀴즈를 풀지 않았습니다.")
         else:
+            print("🏆 명예의 전당 🏆")
+            print(f"🏆 닉네임: {self.best_nickname}님")
             print(f"🏆 최고 점수: {self.best_score}점")
-        print("=" * 40)
+            print(f"🏆 등재일: {self.best_score_date}")
+        print("=" * 30)
+
+
+    # 메뉴 출력
+    def show_menu(self):
+        
+        print("\n" + "=" * 30)
+        print("     Python Quiz Game ")
+        print("=" * 30)
+        print("\n  1. 퀴즈 풀기")
+        print("\n  2. 퀴즈 추가")
+        print("\n  3. 퀴즈 목록")
+        print("\n  4. 점수 확인")
+        print("\n  5. 종료\n")
+        print("=" * 30)
+        print()
 
 
     # 게임 메인 루프. Ctrl+C / EOF 발생 시 안전하게 종료
     def run(self):
         
+        # 닉네임
+        self.nickname = input("닉네임을 입력하세요: ").strip()
+        print(f"\n안녕하세요, {self.nickname} 님!")
+
         # 메뉴 보여주기
         while True:
             try:
                 self.show_menu()
-                choice = self.get_int_input("선택: ", 1, 5)
+                choice = self.get_int_input(">> : ", 1, 5)
 
                 if choice == 1:
                     self.play_quiz()
@@ -120,16 +153,88 @@ class QuizGame:
                     self.show_score()
                 elif choice == 5:
                     print("\n퀴즈가 종료되었습니다. 데이터를 저장합니다.")
-                    self.save_state()
+                    self.save_state(self.nickname)
                     break
 
             except KeyboardInterrupt:
                 print("\n\n⚠️ Ctrl+C 감지!!! 데이터를 저장하고 종료합니다.")
-                self.save_state()
+                self.save_state(self.nickname)
                 break
 
             # EOFError : 입력 스트림이 종료되었음을 나타냄 (예: Ctrl+D, Ctrl+Z, 또는 파일 끝)
             except EOFError:
                 print("\n\n⚠️ 입력 스트림 종료! 데이터를 저장하고 종료합니다.")
                 self.save_state()
-                break            
+                break
+
+
+    # 퀴즈 출제(순서 랜덤) 및 결과 표시
+    def play_quiz(self):
+        
+        if not self.quizzes:
+            print("\n⚠️ 등록된 퀴즈가 없습니다. 먼저 퀴즈를 추가해 주세요.")
+            return
+
+        quiz_list = self.quizzes.copy()
+        
+        # 퀴즈 출제(순서 랜덤)
+        random.shuffle(quiz_list)
+        
+        total = len(quiz_list)
+
+        print()
+        print(f"\n📝 퀴즈를 시작합니다! (총 {total} 문제)")
+
+        correct_count = 0
+        for i, quiz in enumerate(quiz_list, 1):
+            print("\n" + "=" * 30)
+            quiz.display(i)
+
+            user_answer = self.get_int_input("\n정답 입력 (1 ~ 4): ", 1, 4)
+
+            if quiz.check_answer(user_answer):
+                print("✅ 정답입니다!")
+                correct_count += 1
+            else:
+                correct_text = quiz.choices[quiz.answer - 1]
+                print(f"❌ 오답입니다. 정답은 {quiz.answer}번 '{correct_text}'입니다.")
+
+
+        # 점수 계산
+        score = int(correct_count / total * 100)
+        print("\n" + "=" * 30)
+
+        # 결과 출력
+        user = self.nickname
+        print(f"🏆 {user} 님의 결과: {total}문제 중 {correct_count}문제 정답 ({score}점)")
+
+
+        # 명예의 전당 등재 여부
+        if score > self.best_score:
+            self.best_score = score
+            self.best_nickname = self.nickname
+            self.best_score_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            print(f"🎉 {self.best_nickname}님이 새로운 최고 점수를 기록했습니다!")
+        else:
+            print(f"현재 최고 점수: {self.best_score}점")
+
+
+        print("=" * 30)
+        
+        # 저장
+        self.save_state()
+
+
+    # 등록된 퀴즈 목록 출력
+    def show_quiz_list(self):
+        
+        if not self.quizzes:
+            print("\n⚠️ 등록된 퀴즈가 없습니다.")
+            return
+
+        print(f"\n📋 등록된 퀴즈 목록 (총 {len(self.quizzes)} 개)")
+        print("=" * 30)
+        for i, quiz in enumerate(self.quizzes, 1):
+            print(f"[{i}] {quiz.question}")
+        print("=" * 30)
+
