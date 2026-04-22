@@ -88,4 +88,48 @@ class QuizGame:
                 json.dump(data, f, ensure_ascii=False, indent=2)
         except OSError as e:
             print(f"⚠️ 파일 저장 오류 ({e}). 데이터가 저장되지 않았습니다.")
-            
+
+
+    # 최고 점수 출력
+    def show_score(self):
+        
+        print("\n" + "=" * 40)
+        if self.best_score == 0:
+            print("아직 퀴즈를 풀지 않았습니다.")
+        else:
+            print(f"🏆 최고 점수: {self.best_score}점")
+        print("=" * 40)
+
+
+    # 게임 메인 루프. Ctrl+C / EOF 발생 시 안전하게 종료
+    def run(self):
+        
+        # 메뉴 보여주기
+        while True:
+            try:
+                self.show_menu()
+                choice = self.get_int_input("선택: ", 1, 5)
+
+                if choice == 1:
+                    self.play_quiz()
+                elif choice == 2:
+                    self.add_quiz()
+                elif choice == 3:
+                    self.show_quiz_list()
+                elif choice == 4:
+                    self.show_score()
+                elif choice == 5:
+                    print("\n퀴즈가 종료되었습니다. 데이터를 저장합니다.")
+                    self.save_state()
+                    break
+
+            except KeyboardInterrupt:
+                print("\n\n⚠️ Ctrl+C 감지!!! 데이터를 저장하고 종료합니다.")
+                self.save_state()
+                break
+
+            # EOFError : 입력 스트림이 종료되었음을 나타냄 (예: Ctrl+D, Ctrl+Z, 또는 파일 끝)
+            except EOFError:
+                print("\n\n⚠️ 입력 스트림 종료! 데이터를 저장하고 종료합니다.")
+                self.save_state()
+                break            
