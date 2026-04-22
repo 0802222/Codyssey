@@ -134,7 +134,7 @@ class QuizGame:
     def run(self):
         
         # 닉네임
-        self.nickname = input("닉네임을 입력하세요: ").strip()
+        self.nickname = self.get_str_input("닉네임을 입력하세요: ")
         print(f"\n안녕하세요, {self.nickname} 님!")
 
         # 메뉴 보여주기
@@ -156,14 +156,14 @@ class QuizGame:
                     self.save_state(self.nickname)
                     break
 
+            # get_int_input / get_str_input에서 raised 된 에러를 run()에서 잡아서 처리
             except KeyboardInterrupt:
                 print("\n\n⚠️ Ctrl+C 감지!!! 데이터를 저장하고 종료합니다.")
                 self.save_state(self.nickname)
                 break
 
-            # EOFError : 입력 스트림이 종료되었음을 나타냄 (예: Ctrl+D, Ctrl+Z, 또는 파일 끝)
             except EOFError:
-                print("\n\n⚠️ 입력 스트림 종료! 데이터를 저장하고 종료합니다.")
+                print("\n\n⚠️ 입력 스트림 종료(Ctrl+D / Ctrl+Z)!!! 데이터를 저장하고 종료합니다.")
                 self.save_state()
                 break
 
@@ -208,7 +208,6 @@ class QuizGame:
         user = self.nickname
         print(f"🏆 {user} 님의 결과: {total}문제 중 {correct_count}문제 정답 ({score}점)")
 
-
         # 명예의 전당 등재 여부
         if score > self.best_score:
             self.best_score = score
@@ -217,7 +216,6 @@ class QuizGame:
             print(f"🎉 {self.best_nickname}님이 새로운 최고 점수를 기록했습니다!")
         else:
             print(f"현재 최고 점수: {self.best_score}점")
-
 
         print("=" * 30)
         
@@ -237,4 +235,76 @@ class QuizGame:
         for i, quiz in enumerate(self.quizzes, 1):
             print(f"[{i}] {quiz.question}")
         print("=" * 30)
+
+
+    # 퀴즈 추가
+    def add_quiz(self):
+        print("\n+ 새로운 퀴즈를 추가합니다.")
+
+        question = self.get_str_input("\n문제를 입력하세요: ")
+
+        # 선택지 입력
+        choices = []
+        for i in range(1, 5):
+            choice = self.get_str_input(f"선택지 {i}: ")
+            choices.append(choice)
+
+        answer = self.get_int_input("정답 번호 (1 ~ 4): ", 1, 4)
+
+        self.quizzes.append(Quiz(question, choices, answer))
+        
+        # 저장
+        self.save_state()
+
+        print("\n✅ 퀴즈가 추가되었습니다!")
+
+    
+    # 입력 유효성 검사 메서드(정수)
+    def get_int_input(self, prompt, min_val, max_val):
+        """
+        유효한 정수를 입력받는다.
+        - 앞뒤 공백 자동 제거
+        - 빈 입력, 숫자 아닌 값, 범위 밖 값은 재입력 요청
+        - KeyboardInterrupt / EOFError는 상위로 전파
+        """
+        while True:
+            try:
+                raw = input(prompt).strip()
+            except (KeyboardInterrupt, EOFError):
+                raise # 여기서 처리하지 않고 상위로 던짐
+
+            if not raw:
+                print(f"⚠️ 입력이 비어 있습니다. {min_val} ~ {max_val} 사이의 숫자를 입력하세요.")
+                continue
+
+            try:
+                value = int(raw)
+            except ValueError:
+                print(f"⚠️ 잘못된 입력입니다. {min_val} ~ {max_val} 사이의 숫자를 입력하세요.")
+                continue
+
+            if value < min_val or value > max_val:
+                print(f"⚠️ {min_val} ~ {max_val} 사이의 숫자를 입력하세요.")
+                continue
+
+            return value
+
+
+    # 입력 유효성 검사 메서드(문자열)
+    def get_str_input(self, prompt):
+        """
+        - 앞뒤 공백 자동 제거
+        - 빈 입력은 재입력 요청
+        """
+        while True:
+            try:
+                raw = input(prompt).strip()
+            except (KeyboardInterrupt, EOFError):
+                raise # 여기서 처리하지 않고 상위로 던짐
+
+            if not raw:
+                print("⚠️ 입력이 비어 있습니다. 다시 입력하세요.")
+                continue
+
+            return raw    
 
