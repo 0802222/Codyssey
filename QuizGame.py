@@ -59,3 +59,33 @@ class QuizGame:
         if msg:
             print(msg)
             self._load_defaults()
+
+
+    # 기본 퀴즈 데이터를 로드
+    def _load_defaults(self):
+        
+        # DEFAULT_QUIZZES 리스트의 각 딕셔너리를 Quiz 객체로 변환하여 self.quizzes에 저장
+        self.quizzes = [Quiz.from_dict(q) for q in DEFAULT_QUIZZES]
+        self.best_score = 0
+
+
+    # 퀴즈와 최고 점수를 state.json에 저장
+    def save_state(self):
+    
+        data = {
+            "quizzes": [q.to_dict() for q in self.quizzes],
+            "best_score": self.best_score
+        }
+
+        # JSON 파일로 저장
+        """
+        - 'w' : 쓰기모드 (파일이 없으면 새로 생성, 있으면 덮어쓰기)
+        - json.dump() : Python 객체를 JSON 형식으로 변환하여 파일에 저장
+        - ensure_ascii=False : JSON 파일에 한글이 그대로 저장되도록 설정 (유니코드 이스케이프 방지)
+        """
+        try:
+            with open(STATE_FILE, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except OSError as e:
+            print(f"⚠️ 파일 저장 오류 ({e}). 데이터가 저장되지 않았습니다.")
+            
