@@ -34,8 +34,6 @@ DEFAULT_QUIZZES = [
     }
 ]
 
-
-
 class Quiz:
 
     def __init__(self, question, choices, answer):

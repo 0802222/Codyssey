@@ -11,9 +11,10 @@ class QuizGame:
     def __init__(self):
         self.quizzes = []          
         self.best_score = 0        
-        self.best_score_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.best_score_date = ""
         self.nickname = ""         
         self.best_nickname = ""   
+        self.players = []
         self.load_state()
 
 
@@ -47,6 +48,9 @@ class QuizGame:
 
             # best_score_date 키의 값을 문자열로 변환하여 self.best_score_date에 저장, 없으면 빈 문자열로 초기화
             self.best_score_date = str(data.get("best_score_date", ""))
+
+            # players 키의 리스트를 문자열 리스트로 변환하여 self.players에 저장, 없으면 빈 리스트로 초기화
+            self.players = data.get("players", [])
             
             print(
                 f"📂 저장된 데이터를 불러왔습니다. "
@@ -80,12 +84,14 @@ class QuizGame:
 
 
     # 퀴즈와 최고 점수를 state.json에 저장
-    def save_state(self, nickname=""):
+    def save_state(self):
     
         data = {
             "quizzes": [q.to_dict() for q in self.quizzes],
             "best_score": self.best_score,
-            "best_nickname": self.best_nickname
+            "best_nickname": self.best_nickname,
+            "best_score_date": self.best_score_date,
+            "players": self.players
         }
 
         # JSON 파일로 저장
@@ -111,7 +117,8 @@ class QuizGame:
             print("🏆 명예의 전당 🏆")
             print(f"🏆 닉네임: {self.best_nickname}님")
             print(f"🏆 최고 점수: {self.best_score}점")
-            print(f"🏆 등재일: {self.best_score_date}")
+            if self.best_score_date:
+                print(f"🏆 등재일: {self.best_score_date}")
         print("=" * 30)
 
 
@@ -133,8 +140,28 @@ class QuizGame:
     # 게임 메인 루프. Ctrl+C / EOF 발생 시 안전하게 종료
     def run(self):
         
-        # 닉네임
-        self.nickname = self.get_str_input("닉네임을 입력하세요: ")
+        # 닉네임 입력받기
+        while True:
+            try:
+                self.nickname = self.get_str_input("닉네임을 입력하세요: ")
+            except KeyboardInterrupt:
+                print("\n\n⚠️ Ctrl+C 감지!!! 데이터를 저장하고 종료합니다.")
+                self.save_state()
+                return
+            except EOFError:
+                print("\n\n⚠️ 입력 스트림 종료(Ctrl+D)!!! 데이터를 저장하고 종료합니다.")
+                self.save_state()
+                return
+            
+            if self.is_duplicate_nickname(self.nickname):
+                print("\n⚠️ 이미 사용중인 닉네임입니다. 다른 닉네임을 입력해주세요!")
+                continue
+            
+            self.nickname = self.nickname.strip().lower()
+            self.players.append(self.nickname)
+            self.save_state()
+            break
+
         print(f"\n안녕하세요, {self.nickname} 님!")
 
         # 메뉴 보여주기
@@ -153,13 +180,13 @@ class QuizGame:
                     self.show_score()
                 elif choice == 5:
                     print("\n퀴즈가 종료되었습니다. 데이터를 저장합니다.")
-                    self.save_state(self.nickname)
+                    self.save_state()
                     break
 
             # get_int_input / get_str_input에서 raised 된 에러를 run()에서 잡아서 처리
             except KeyboardInterrupt:
                 print("\n\n⚠️ Ctrl+C 감지!!! 데이터를 저장하고 종료합니다.")
-                self.save_state(self.nickname)
+                self.save_state()
                 break
 
             except EOFError:
@@ -209,7 +236,10 @@ class QuizGame:
         print(f"🏆 {user} 님의 결과: {total}문제 중 {correct_count}문제 정답 ({score}점)")
 
         # 명예의 전당 등재 여부
-        if score > self.best_score:
+        """
+        - 동점 처리 규칙 : 최고 점수보다 크거나 같으면 갱신 (가장 최근에 달성한 사람이 명예의 전당에 등재)
+        """
+        if score >= self.best_score:
             self.best_score = score
             self.best_nickname = self.nickname
             self.best_score_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -308,3 +338,14 @@ class QuizGame:
 
             return raw    
 
+    # 닉네임 정규화
+    def normalize_nickname(self, nickname):
+        return nickname.strip().lower()
+    
+    # 닉네임 중복 방지
+    def is_duplicate_nickname(self, nickname):
+        new_name = self.normalize_nickname(nickname)
+        return any(
+            new_name == self.normalize_nickname(player) 
+            for player in self.players
+        )
