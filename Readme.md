@@ -129,7 +129,10 @@ mission2/
 ## 6. 실행 화면 스크린샷 📸
 
 스크린샷은 `docs/screenshots/` 폴더에 있습니다.
-
+- `git clone.png` - 깃 클론
+  ![깃 클론](./docs/screenshots/git_clone.png)
+- `git pull` - 깃 풀
+  ![깃 풀](./docs/screenshots/git_pull.png)
 - `menu.png` — 메인 메뉴
   ![메인 메뉴](./docs/screenshots/menu.png)
 - `play.png` — 퀴즈 풀기

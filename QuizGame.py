@@ -163,7 +163,7 @@ class QuizGame:
                 break
 
             except EOFError:
-                print("\n\n⚠️ 입력 스트림 종료(Ctrl+D / Ctrl+Z)!!! 데이터를 저장하고 종료합니다.")
+                print("\n\n⚠️ 입력 스트림 종료(Ctrl+D)!!! 데이터를 저장하고 종료합니다.")
                 self.save_state()
                 break
 
