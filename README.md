@@ -369,7 +369,7 @@ uid=1003(agent-test) gid=1005(agent-test) groups=1005(agent-test),1001(agent-com
     ```
 
 
-### 미션 외 - 그룹 수정
+### 미션 외 - 그룹 삭제
 - 그룹이 실제로 존재하는지 확인 : `getent group <그룹 명>`
     ```bash
     getent group agent-old
