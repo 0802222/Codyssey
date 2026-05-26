@@ -103,6 +103,9 @@ nano /etc/ssh/sshd_config
     Port 22 를 주석 해제 하고, Port 20022 로 변경한다.
     ![alt text](docs/screenshots/b1-1_포트%20변경%20전.png)
 
+```bash
+cat /etc/ssh/sshd_config
+```
 - 포트 변경 후 (20022)
 
     포트 변경 후 SSH 데몬이 20022 포트로 리스닝하도록 설정되었다. 
@@ -337,11 +340,12 @@ uid=1003(agent-test) gid=1005(agent-test) groups=1005(agent-test),1001(agent-com
 
 ### 미션 외 - 계정 수정
 - 계정 이름 + 홈 디렉토리 같이 변경
-- `usermod -l <계정 명> -d <기존 경로> -m <새 경로>`
+- `usermod -l <새 계정 명> -d <새 경로> -m <새 경로>`
 - `-l` : 로그인 이름 변경 (old -> new)
-- `-d <경로> -m` : 홈 디렉토리도 새 이름으로 이동하면서 변경
+- `-d <경로>` : 홈 디렉토리도 새 계정 명으로 변경
+- `-m <경로>` : 기존 홈 내용을 새 경로로 이동
     ```bash
-    usermod -l agent-admin -d /home/agent-admin-before -m agent-admin2-after
+    usermod -l agent-new -d /home/agent-new -m agent-old
     ```
 
 ### 미션 외 - 계정 삭제
@@ -355,7 +359,39 @@ uid=1003(agent-test) gid=1005(agent-test) groups=1005(agent-test),1001(agent-com
     rm -rf /hone/agent-admin
     ```
 
-    
+
+### 미션 외 - 그룹 수정
+- 현재 그룹 확인 : `getent group <기존 계정 명>`
+- 그룹 수정 : `groupmod -n <새 계정 명> <기존 계정 명>`
+
+    ```bash
+    groupmod -n agent-new agent-old
+    ```
+
+
+### 미션 외 - 그룹 수정
+- 그룹이 실제로 존재하는지 확인 : `getent group <그룹 명>`
+    ```bash
+    getent group agent-old
+    ```
+- 이 그룹을 기본 그룹으로 쓰는 사용자가 있는지 확인 : `grep <그룹 명> /etc/passwd`
+    ```bash
+    grep agent-old /etc/passwd
+    ```
+- 기본 그룹으로 사용중이라면 새그룹을 만들고, 사용자 기본그룹을 새 그룹으로 변경
+    ```bash
+    groupadd agent-new
+    ```
+
+    ```bash
+    usermod -g <새 그룹 명> <사용자 명>
+    ```
+- 그룹 삭제 : `groupdel <그룹 명>`
+
+    ```bash
+    groupdel agent-old
+    ```
+
 ### 디렉토리 및 권한 설정
 - $AGENT_HOME (예: /home/agent-admin/agent-app)
 - $AGENT_HOME/upload_files
