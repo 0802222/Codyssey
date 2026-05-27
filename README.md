@@ -520,7 +520,8 @@ drwxrwx--- 1 agent-admin agent-common 0 May 27 14:03 upload_files
 ```
 
 - ACL 설정 확인
-getfacl /home/agent-admin/agent-app/upload_files
+
+`upload_files`
 ```bash
 root@90321cb174ce:/var/log/agent-app# getfacl /home/agent-admin/agent-app/upload_files/
 getfacl: Removing leading '/' from absolute path names
@@ -532,7 +533,7 @@ group::rwx
 other::---
 ```
 
-getfacl /home/agent-admin/agent-app/api_keys
+`api_keys`
 ```bash
 root@90321cb174ce:/var/log/agent-app# getfacl /home/agent-admin/agent-app/api_keys
 getfacl: Removing leading '/' from absolute path names
@@ -563,36 +564,61 @@ export AGENT_LOG_DIR=/var/log/agent-app
 source /home/agent-admin/.bashrc
 
 # 3) 확인
-echo $AGENT_HOME
-# 결과: /home/agent-admin/agent-app
+echo $환경변수명
+
+```bash
+root@90321cb174ce:~# echo $AGENT_HOME, $AGENT_PORT, $AGENT_UPLOAD_DIR, $AGENT_KEY_PATH, $AGENT_LOG_DIR
+/home/agent-admin/agent-app, 15034, /home/agent-admin/agent-app/upload_files, /home/agent-admin/agent-app/api_keys/t_secret.key, /var/log/agent-app
 ```
+
 
 ### API 키 생성
-```bash
-# 1) agent-admin으로 전환 (또는 sudo -u agent-admin)
-sudo -u agent-admin bash
+![alt text](docs/screenshots/b1-1_사용자%20전환(root%20->%20agent-admin).png)
+- 사용자 전환 (root -> agent-admin)
+    - `su` : Switch User, 다른 사용자로 전환하되 기존 사용자의 환경변수 유지 (옵션없이 su 만 입력하면 root 로 전환)
+    - `su -` :다른 사용자로 완전히 전환하며, 환경변수와 홈 디렉토리 까지 변경 됨 (사용자명 없으면 root로 완전히 전환)
+    - `sudo` : SuperUser Do, 권한만 빌려서 단일 명령어 실행
 
-# 2) 키 파일 생성
-echo "agent_api_key_test" > /home/agent-admin/agent-app/api_keys/t_secret.key
+    - `exit` : exit 명령으로 logout 후 원래 계정으로 돌아온다.
+    ```bash
+    root@90321cb174ce:~# su - agent-admin
+    agent-admin@90321cb174ce:~$
+    ```
 
-# 3) 권한 설정
-chmod 640 /home/agent-admin/agent-app/api_keys/t_secret.key
+- 키 파일 생성
+    ```bash
+    echo "agent_api_key_test" > /home/agent-admin/agent-app/api_keys/t_secret.key
+    ```
 
-# 4) 확인
-cat /home/agent-admin/agent-app/api_keys/t_secret.key
-```
+- 호스트로 나가서 권한 설정
+    ```bash
+    exit
+    chmod 640 /home/agent-admin/agent-app/api_keys/t_secret.key
+    ```
+
+- 확인
+    ```bash
+    cat /home/agent-admin/agent-app/api_keys/t_secret.key
+    ```
+
 
 ### 앱 실행
-```bash
-# 1) agent-app.zip 다운로드 & 추출
-# 제공된 파일을 $AGENT_HOME에 배치
+- 호스트 터미널에서 agent-app.zip 다운로드 후 컨테이너의 $AGENT_HOME에 복사
+    ```bash
+    c08022220523@c6r7s8 ~ % cd Downloads
+    c08022220523@c6r7s8 Downloads % docker cp agent-app mission-b1-1:/home/agent-admin
+    
+    Successfully copied 14MB to mission-b1-1:/home/agent-admin
+    ```
 
-# 2) agent-admin으로 실행
-sudo -u agent-admin bash
+- agent-admin으로 실행
+    ```bash
+    su - agent-admin
+    cd $AGENT_HOME
+    python3 agent_app.py
+    ```
 
-cd $AGENT_HOME
 
-python3 agent_app.py
 
 
 # 3) 정상 출력 확인:
