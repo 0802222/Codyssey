@@ -48,8 +48,8 @@ Codyssey 실습환경은 프로그램 설치가 제한되어 있어서,
     # 설치된 패키지들을 최신 버전으로 업그레이드 하기 (-y : 업그레이드 후 Yes/No 를 묻는데, 자동으로 Yes 라고 답하는 옵션)
 
   
-    root@abc123:/# apt install -y nano openssh-server ufw cron
-    # 4개의 패키지를 설치하고 자동으로 Yes 라고 답하기 (nano : 텍스트 에디터, openssh-server : ssh 서버, ufw : 방화벽, cron : 스케쥴 실행 도구)
+    root@abc123:/# apt install -y nano openssh-server ufw cron acl
+    # 4개의 패키지를 설치하고 자동으로 Yes 라고 답하기 (nano : 텍스트 에디터, openssh-server : ssh 서버, ufw : 방화벽, cron : 스케쥴 실행 도구, acl : Access Control List, 파일이나 디렉토리에 대한 접근권한 관리 시스템)
     ```
 - 컨테이너 나가기 (혹은 Ctrl + D) 
     ```bash
@@ -61,10 +61,7 @@ Codyssey 실습환경은 프로그램 설치가 제한되어 있어서,
     ```
 - 컨테이너에 접속해서 작업하기
     ```bash
-    docker start -ai mission-b1-1
-    # -i : Interactive,입력받기
-    # -a : Attach, 컨테이너의 stdout/stderr를 현재 터미널에 연결해서 출력을 본다
-    # -ai : 둘 다
+    docker exec -it mission-b1-1 /bin/bash
     ```
 <br>
 <br>
@@ -400,31 +397,151 @@ uid=1003(agent-test) gid=1005(agent-test) groups=1005(agent-test),1001(agent-com
 
 ```bash
 # 1) AGENT_HOME 디렉토리 생성 (agent-admin 계정으로)
-sudo mkdir -p /home/agent-admin/agent-app
-sudo mkdir -p /home/agent-admin/agent-app/bin
-sudo mkdir -p /home/agent-admin/agent-app/upload_files
-sudo mkdir -p /home/agent-admin/agent-app/api_keys
+mkdir -p /home/agent-admin/agent-app
+mkdir -p /home/agent-admin/agent-app/bin
+mkdir -p /home/agent-admin/agent-app/upload_files
+mkdir -p /home/agent-admin/agent-app/api_keys
+
+```bash
+root@90321cb174ce:/# cd /home/agent-admin/agent-app
+root@90321cb174ce:/home/agent-admin/agent-app# ls   
+api_keys  bin  upload_files
+```
 
 # 2) 소유자 변경
-sudo chown -R agent-admin:agent-core /home/agent-admin/agent-app
+`agent-app` 디렉토리와 그 하위의 모든 파일/디렉토리 소유권을 변경
+- `chown` : change owner, 파일/ 디렉토리 소유자와 그룹 변경
+- `R` : Recursive(재귀적) 옵션, 지정 디렉토리 및 그 안의 하위 디렉토리/파일까지 일괄 변경
+- `agent-admin` : 새로운 소유자(owner)
+- `agent-core` : 새로운 그룹(group)
+- `/home/agent-admin/agent-app/` : 변경할 대상 디렉토리 경로
+
+```bash
+chown -R agent-admin:agent-core /home/agent-admin/agent-app
+```
+
+- 소유자 변경 후 권한 확인
+`agent-app` 의 모든 하위 디렉토리가 `agent-admin(소유자):agent-core(그룹)`로 변경 됨
+
+```bash
+root@90321cb174ce:/home/agent-admin/agent-app# ls -al
+total 0
+drwxr-xr-x 1 agent-admin agent-core  46 May 27 14:04 .
+drwxr-x--- 1 agent-admin agent-admin 72 May 27 14:03 ..
+drwxr-xr-x 1 agent-admin agent-core   0 May 27 14:04 api_keys
+drwxr-xr-x 1 agent-admin agent-core   0 May 27 14:03 bin
+drwxr-xr-x 1 agent-admin agent-core   0 May 27 14:03 upload_files
+```
 
 # 3) upload_files 권한 (agent-common 모두 접근 가능)
-sudo chmod 770 /home/agent-admin/agent-app/upload_files
-sudo chgrp agent-common /home/agent-admin/agent-app/upload_files
+- `chmod` : 디렉토리의 권한 변경
+- `chgrp` : 디렉토리의 그룹 변경
+
+```bash
+chmod 770 /home/agent-admin/agent-app/upload_files
+chgrp agent-common /home/agent-admin/agent-app/upload_files
+```
+
+- `upload_files` 디렉토리의 권한이 755(drwxr-xr-x) -> 770(drwxrwx---) 으로 변경 됨 (그룹사용자 쓰기권한 추가, 기타 사용자 접근 불가)
+- `upload_files` 디렉토리의 그룹이 agent-core -> agent-common 으로 변경 됨
+```bash
+root@90321cb174ce:/home/agent-admin/agent-app# ls -al
+total 0
+drwxr-xr-x 1 agent-admin agent-core   46 May 27 14:04 .
+drwxr-x--- 1 agent-admin agent-admin  72 May 27 14:03 ..
+drwxr-xr-x 1 agent-admin agent-core    0 May 27 14:04 api_keys
+drwxr-xr-x 1 agent-admin agent-core    0 May 27 14:03 bin
+drwxrwx--- 1 agent-admin agent-common  0 May 27 14:03 upload_files
+```
 
 # 4) api_keys 권한 (agent-core만 접근)
-sudo chmod 750 /home/agent-admin/agent-app/api_keys
-sudo chgrp agent-core /home/agent-admin/agent-app/api_keys
+```bash
+chmod 750 /home/agent-admin/agent-app/api_keys
+chgrp agent-core /home/agent-admin/agent-app/api_keys
+```
+
+- `api_keys` 디렉토리의 권한이 755(drwxr-xr-x) -> 750(drwxr-x---) 으로 변경 됨 (기타 사용자 접근 불가)
+```bash
+root@90321cb174ce:/home/agent-admin/agent-app# ls -al
+total 0
+drwxr-xr-x 1 agent-admin agent-core   46 May 27 14:04 .
+drwxr-x--- 1 agent-admin agent-admin  72 May 27 14:03 ..
+drwxr-x--- 1 agent-admin agent-core    0 May 27 14:04 api_keys
+drwxr-xr-x 1 agent-admin agent-core    0 May 27 14:03 bin
+drwxrwx--- 1 agent-admin agent-common  0 May 27 14:03 upload_files
+```
 
 # 5) 로그 디렉토리 생성
-sudo mkdir -p /var/log/agent-app
-sudo chown agent-admin:agent-core /var/log/agent-app
-sudo chmod 770 /var/log/agent-app
+- 로그 디렉토리 생성
+```bash
+mkdir -p /var/log/agent-app
+```
 
-# 6) 확인
-ls -l /home/agent-admin/agent-app/
+- 최초 권한 확인
+```bash
+root@90321cb174ce:/var/log/agent-app# ls -al
+total 0
+drwxr-xr-x 1 root root   0 May 27 14:36 .
+drwxr-xr-x 1 root root 112 May 27 14:36 ..
+```
+
+- 디렉토리 소유자 및 권한 변경
+```bash
+chown agent-admin:agent-core /var/log/agent-app
+chmod 770 /var/log/agent-app
+```
+
+- 변경된 소유자 : root:root -> agent-admin:agent-core
+- 변경된 권한 : 755(drwxr-xr-x) -> 770(drwxrwx---)
+```bash
+root@90321cb174ce:/var/log/agent-app# ls -al
+total 0
+drwxrwx--- 1 agent-admin agent-core   0 May 27 14:36 .
+drwxr-xr-x 1 root        root       112 May 27 14:36 ..
+```
+
+# 6) ACL 의존성 설치 및 확인
+- ACL : Access Control List, 기본권한(rwx)보다 상세한 권한 설정을 가능하게하는 시스템
+- `setfacl` : 파일이나 디렉토리의 ACL 설정
+- `getfacl` : 파일이나 디렉토리의 ACL 설정 확인
+
+- ACL 의존성 설치
+```bash
+apt-get install acl
+```
+
+- 권한 확인
+```bash
+root@90321cb174ce:/var/log/agent-app# ls -l /home/agent-admin/agent-app/
+total 0
+drwxr-x--- 1 agent-admin agent-core   0 May 27 14:04 api_keys
+drwxr-xr-x 1 agent-admin agent-core   0 May 27 14:03 bin
+drwxrwx--- 1 agent-admin agent-common 0 May 27 14:03 upload_files
+```
+
+- ACL 설정 확인
 getfacl /home/agent-admin/agent-app/upload_files
+```bash
+root@90321cb174ce:/var/log/agent-app# getfacl /home/agent-admin/agent-app/upload_files/
+getfacl: Removing leading '/' from absolute path names
+# file: home/agent-admin/agent-app/upload_files/
+# owner: agent-admin
+# group: agent-common
+user::rwx
+group::rwx
+other::---
+```
+
 getfacl /home/agent-admin/agent-app/api_keys
+```bash
+root@90321cb174ce:/var/log/agent-app# getfacl /home/agent-admin/agent-app/api_keys
+getfacl: Removing leading '/' from absolute path names
+# file: home/agent-admin/agent-app/api_keys
+# owner: agent-admin
+# group: agent-core
+user::rwx
+group::r-x
+other::---
 ```
 <br>
 <br>
@@ -433,7 +550,7 @@ getfacl /home/agent-admin/agent-app/api_keys
 ### 환경변수 설정
 ```bash
 # 1) agent-admin의 bash 프로필에 환경 변수 추가
-sudo nano /home/agent-admin/.bashrc
+nano /home/agent-admin/.bashrc
 
 # 맨 끝에 추가:
 export AGENT_HOME=/home/agent-admin/agent-app
