@@ -18,7 +18,7 @@
 ## 수행 증거 (방법1. docker container 이용)
 ### 공통 - Docker / Container 준비
 Codyssey 실습환경은 프로그램 설치가 제한되어 있어서,
-제공된 OrbStack 을 사용하여 Docker 를 사용한다.
+제공된 OrbStack 을 통해 Docker 를 사용한다.
 - docker version 확인
     ```bash
     # docker --version
@@ -28,6 +28,7 @@ Codyssey 실습환경은 프로그램 설치가 제한되어 있어서,
     ```
 
 - 컨테이너 생성 (linux-ubuntu)
+
     컨테이너를 띄울 때 네트워크/iptabls 를 만질 수 있는 커널 capability 를 열어준다.
 
     ```bash
@@ -71,8 +72,7 @@ Codyssey 실습환경은 프로그램 설치가 제한되어 있어서,
 SSH Port 는 `sshd_config` 파일에서 설정할 수 있다.
 
 ### ssh 관련 설정파일
-`sshd_config` : 서버 데몬 설정 (외부 서버 -> 내 서버 접속 시)
-- SSH Daemon의 설정파일로, 외부에서 서버로 SSH 접속할 때의 동작을 제어한다.
+`sshd_config` : 서버 데몬 설정 (외부 서버 -> 내 서버 SSH 접속 시)
 - `sshd` 는 리눅스에서 항상 실행되고 있는 백그라운드 프로그램이다.
 
 
@@ -81,8 +81,8 @@ SSH Port 는 `sshd_config` 파일에서 설정할 수 있다.
 <br>
 
 ### `sshd_config` 주요 내용
-- `Port`: SSH가 사용할 포트 번호 (기본값 22)
-- `PermitRootLogin`: root 계정의 원격 로그인 허용 여부
+- `Port`: SSH가 사용할 포트 번호 (기본값 22) -> `20022 로 변경`
+- `PermitRootLogin`: root 계정의 원격 로그인 허용 여부 -> `no 로 차단`
 - `PasswordAuthentication`: 비밀번호 인증 허용 여부
 - `PubkeyAuthentication`: 공개키 인증 허용 여부
 - `Protocol`: SSH 프로토콜 버전 선택 (보안상 2 권장)
@@ -122,7 +122,7 @@ cat /etc/ssh/sshd_config
 <br>
 
 ### 3. Port 변경 확인
-- apt upgrade
+- 의존성 설치 - apt upgrade
     ```bash
     # netstat 사용을 위한 apt 업그레이드
     apt-get update
@@ -134,25 +134,28 @@ cat /etc/ssh/sshd_config
     apt-get install -y iproute2
     ```
 
-- 변경 확인
+- 확인 방법1. `netstat` (Network Statistics)
     ```bash
-    # 방법1. netstat (Network Statistics)
+    # 
     # 현재 LISTEN 중인 TCP/UDP 포트 목록 + 그 포트를 잡고 있는 프로세스(PID/이름)를 보여준다.
     netstat -tulnp | grep 20022
 
     tcp        0      0 0.0.0.0:20022           0.0.0.0:*               LISTEN      4552/sshd: /usr/sbi 
     tcp6       0      0 :::20022                :::*                    LISTEN      4552/sshd: /usr/sbi 
+    ```
 
-
-    # 방법2. ss (Socket Statistics)
+- 확인 방법2. `ss` (Socket Statistics)
+    ```bash
     # netstat의 최신 버전같은 도구, LISTEN 포트와 프로세스 정보를 더 빠르게 보여준다.
     ss -tulnp | grep 20022
 
     Netid   State    Recv-Q   Send-Q     Local Address:Port      Peer Address:Port  Process                                                                         
     tcp     LISTEN   0        128              0.0.0.0:20022          0.0.0.0:*      users:(("sshd",pid=4552,fd=6))                                                 
     tcp     LISTEN   0        128                 [::]:20022             [::]:*      users:(("sshd",pid=4552,fd=7))   
+    ```
 
-    # 방법3. ps aux | grep 프로세스
+- 확인 방법3. `ps aux | grep` 프로세스
+    ```bash
     # 시스템의 모든 실행중인 프로세스 + 동작 모드 상세 표시 명령어
     ps aux | grep sshd
 
@@ -166,8 +169,10 @@ cat /etc/ssh/sshd_config
 
 
 ## 1-2. ROOT 로그인 차단 (prohibit-password -> no)
-Root 로그인은 sshd_config 파일에서 수정할 수 있다.
+Root 로그인도 `sshd_config` 파일에서 수정할 수 있다.
 - 권한 변경 (전)
+    
+    PermitRootLogin 의 주석을 해제하고, `prohibit-password` 를 `no` 로 변경한다.
     ```bash
     nano /etc/ssh/sshd_config
     ```
@@ -177,10 +182,18 @@ Root 로그인은 sshd_config 파일에서 수정할 수 있다.
 
 - 권한 변경 (후)
     ```bash
-    cat /etc/ssh/sshd_config
+    root@d1adc33ffdda:/# cat /etc/ssh/sshd_config | grep PermitRootLogin
+    
+    PermitRootLogin no
+
+    # the setting of "PermitRootLogin prohibit-password".
     ```
 
     ![alt text](docs/screenshots/b1-1_PermitRootLogin%20변경%20후.png)
+    - PermitRootLogin 의 옵션
+    - yes : Root 로그인 허용 (비밀번호 가능)  
+    - no : Root 로그인 차단 (완전히 차단)
+    - prohibit-password : Root 로그인은 허용하되, 비밀번호 인증은 금지한다. (공개키 인증으로만 접속가능)
 
 - 서비스 재시작
     ```bash
@@ -189,22 +202,7 @@ Root 로그인은 sshd_config 파일에서 수정할 수 있다.
     * Restarting OpenBSD Secure Shell server sshd   
     ```
 
-- 변경 확인
 
-    PermitRootLogin 이 "no" 로 잘 차단 됨
-    
-
-    ```bash
-    root@d1adc33ffdda:/# cat /etc/ssh/sshd_config | grep PermitRootLogin
-    
-    PermitRootLogin no
-
-    # the setting of "PermitRootLogin prohibit-password".
-    ```
-- PermitRootLogin 의 옵션
-    - yes : Root 로그인 허용 (비밀번호 가능)  
-    - no : Root 로그인 차단 (완전히 차단)
-    - prohibit-password : Root 로그인은 허용하되, 비밀번호 인증은 금지한다. (공개키 인증으로만 접속가능)
 <br>
 <br>
 
@@ -212,7 +210,7 @@ Root 로그인은 sshd_config 파일에서 수정할 수 있다.
 ### 방화벽 종류
 두 가지 방화벽으로 미션을 수행할 수 있는데, 나는 초보자에게 친화적인 UFW 로 골랐다.
 
-1. `UFW` (Uncomplicated Firewall)
+1. `UFW` (Uncomplicated Firewall) -> 이걸로 진행
 - iptables 래퍼
 - Ubuntu, Debian
 - 초보자 친화적
@@ -247,55 +245,35 @@ Root 로그인은 sshd_config 파일에서 수정할 수 있다.
     Rule added
     Rule added (v6)
     ```
-- 방화벽 상태 확인
-    ![alt text](docs/screenshots/b1-1_방화벽%20상태%20확인.png)
-    ```bash
-    # ufw status
-    root@07c0ae693e1e:/# ufw status
-    
-    Status: active
 
-    To                         Action      From
-    --                         ------      ----
-    20022/tcp                  ALLOW       Anywhere                  
-    15034/tcp                  ALLOW       Anywhere                  
-    20022/tcp (v6)             ALLOW       Anywhere (v6)             
-    15034/tcp (v6)             ALLOW       Anywhere (v6)         
-    
-    # 20022/tcp ALLOW, 15034/tcp ALLOW
-    ```
+### 방화벽 상태 확인
+- ufw status (20022/tcp ALLOW, 15034/tcp ALLOW)
+![alt text](docs/screenshots/b1-1_방화벽%20상태%20확인.png)
+
 <br>
 <br>
 
 # 3. 계정/그룹/권한 설정
 
-### 그룹 생성
-- agent-common: admin, dev, test
-- agent-core: admin, dev
+### 그룹 생성 - `groupadd <그룹 명>`
+2개의 그룹을 생성한다. (agent-common, agent-core)
 
 ```bash
-# groupadd 그룹명
-
+# 그룹 생성
 root@07c0ae693e1e:/# groupadd agent-common
 root@07c0ae693e1e:/# groupadd agent-core
-```
 
-### 그룹 생성 확인
-```bash
-# getent group | grep agent
-
+# 그룹 생성 확인
 root@07c0ae693e1e:/# getent group | grep agent
 
 agent-common:x:1001:
 agent-core:x:1002:
 ```
 
-### 계정 생성
+### 계정 생성 - `useradd -m -s <사용 할 shell> <계정 명>`
 - agent-admin : 관리자
 - agent-dev : 스크립트 작성, 실행
 - agent-test : 테스트 수행
-
-- `useradd -m -s <사용 할 shell> <계정 명>`
 
     ```bash
     root@07c0ae693e1e:/# useradd -m -s /bin/bash agent-admin
@@ -305,8 +283,7 @@ agent-core:x:1002:
 
 
 
-### 그룹 소속 시키기
-- `usermod -aG <그룹 명> <계정 명>`
+### 그룹 소속 시키기 - `usermod -aG <그룹 명> <계정 명>`
 - `-aG` : 기존 그룹을 유지하면서 보조그룹(G)에 추가(a)
 - `-G` : 기존 그룹을 현재 그룹으로 완전히 교체
 
@@ -321,35 +298,37 @@ agent-core:x:1002:
     root@07c0ae693e1e:/# usermod -aG agent-core agent-dev 
     ```
 
-### 그룹 설정 후 계정 확인
-![alt text](docs/screenshots/b1-1%20그룹설정%20후%20계정%20확인.png)
+### 그룹 설정 후 계정 확인 - `id <계정 명>`
 ```bash
 # id <계정 명>
 root@07c0ae693e1e:/# id agent-admin
 uid=1001(agent-admin) gid=1003(agent-admin) groups=1003(agent-admin),1001(agent-common),1002(agent-core)
+
 root@07c0ae693e1e:/# id agent-dev  
 uid=1002(agent-dev) gid=1004(agent-dev) groups=1004(agent-dev),1001(agent-common),1002(agent-core)
+
 root@07c0ae693e1e:/# id agent-test
 uid=1003(agent-test) gid=1005(agent-test) groups=1005(agent-test),1001(agent-common)
-
 ```
+![alt text](docs/screenshots/b1-1%20그룹설정%20후%20계정%20확인.png)
 
+---
 
-### 미션 외 - 계정 수정
+### 미션 외 ) 계정 수정
 - 계정 이름 + 홈 디렉토리 같이 변경
-- `usermod -l <새 계정 명> -d <새 경로> -m <새 경로>`
 - `-l` : 로그인 이름 변경 (old -> new)
 - `-d <경로>` : 홈 디렉토리도 새 계정 명으로 변경
 - `-m <경로>` : 기존 홈 내용을 새 경로로 이동
     ```bash
+    # usermod -l <새 계정 명> -d <새 경로> -m <새 경로>
     usermod -l agent-new -d /home/agent-new -m agent-old
     ```
 
-### 미션 외 - 계정 삭제
-- `userdel -r <계정 명>`
+### 미션 외 ) 계정 삭제
 - `-r` : 설정했던 하위 옵션까지 삭제해라
 
     ```bash
+    # userdel -r <계정 명>
     userderl -r agent-admin
 
     # userdel 만 실행할 경우 남아 있는 홈 디렉터리 삭제 필요
@@ -357,240 +336,257 @@ uid=1003(agent-test) gid=1005(agent-test) groups=1005(agent-test),1001(agent-com
     ```
 
 
-### 미션 외 - 그룹 수정
-- 현재 그룹 확인 : `getent group <기존 계정 명>`
-- 그룹 수정 : `groupmod -n <새 계정 명> <기존 계정 명>`
+### 미션 외 ) 그룹 수정
+- 현재 그룹 확인
+    ```bash
+    # getent group <기존 계정 명>
+- 그룹 수정
 
     ```bash
+    # groupmod -n <새 계정 명> <기존 계정 명>
     groupmod -n agent-new agent-old
     ```
 
 
-### 미션 외 - 그룹 삭제
-- 그룹이 실제로 존재하는지 확인 : `getent group <그룹 명>`
+### 미션 외 ) 그룹 삭제 
+- 그룹이 실제로 존재하는지 확인
     ```bash
+    # getent group <그룹 명>
     getent group agent-old
     ```
-- 이 그룹을 기본 그룹으로 쓰는 사용자가 있는지 확인 : `grep <그룹 명> /etc/passwd`
+- 이 그룹을 기본 그룹으로 쓰는 사용자가 있는지 확인
     ```bash
+    # grep <그룹 명> /etc/passwd
     grep agent-old /etc/passwd
     ```
 - 기본 그룹으로 사용중이라면 새그룹을 만들고, 사용자 기본그룹을 새 그룹으로 변경
     ```bash
+    # usermod -g <새 그룹 명> <사용자 명>
     groupadd agent-new
     ```
-
+- 그룹 삭제
     ```bash
-    usermod -g <새 그룹 명> <사용자 명>
-    ```
-- 그룹 삭제 : `groupdel <그룹 명>`
-
-    ```bash
+    # groupdel <그룹 명>
     groupdel agent-old
     ```
 
-### 디렉토리 및 권한 설정
-- $AGENT_HOME (예: /home/agent-admin/agent-app)
-- $AGENT_HOME/upload_files
-- $AGENT_HOME/api_keys
-- /var/log/agent-app
+<br>
+
+---
+
+### 디렉토리 생성 및 확인
 
 ```bash
-# 1) AGENT_HOME 디렉토리 생성 (agent-admin 계정으로)
+# 디렉토리 생성
 mkdir -p /home/agent-admin/agent-app
 mkdir -p /home/agent-admin/agent-app/bin
 mkdir -p /home/agent-admin/agent-app/upload_files
 mkdir -p /home/agent-admin/agent-app/api_keys
 
-```bash
+# 디렉토리 확인
 root@90321cb174ce:/# cd /home/agent-admin/agent-app
 root@90321cb174ce:/home/agent-admin/agent-app# ls   
 api_keys  bin  upload_files
 ```
 
-# 2) 소유자 변경
-`agent-app` 디렉토리와 그 하위의 모든 파일/디렉토리 소유권을 변경
-- `chown` : change owner, 파일/ 디렉토리 소유자와 그룹 변경
-- `R` : Recursive(재귀적) 옵션, 지정 디렉토리 및 그 안의 하위 디렉토리/파일까지 일괄 변경
-- `agent-admin` : 새로운 소유자(owner)
-- `agent-core` : 새로운 그룹(group)
-- `/home/agent-admin/agent-app/` : 변경할 대상 디렉토리 경로
+### 디렉토리 소유자 변경 - `agent-app`
+- 변경 전 : 소유자 agent-admin, 그룹 `agent-admin (admin)`
 
-```bash
-chown -R agent-admin:agent-core /home/agent-admin/agent-app
-```
+    ```bash
+    chown -R agent-admin:agent-core /home/agent-admin/agent-app
+    ```
 
-- 소유자 변경 후 권한 확인
-`agent-app` 의 모든 하위 디렉토리가 `agent-admin(소유자):agent-core(그룹)`로 변경 됨
+    - `chown` : change owner, 파일/ 디렉토리 소유자와 그룹 변경
+    - `R` : Recursive(재귀적) 옵션, 지정 디렉토리 및 그 안의 하위 디렉토리/파일까지 일괄 변경
+    
+- 변경 후 : 소유자 agent-admin, 그룹 `agent-core (admin, dev)`
+    
+    ```bash
+    root@90321cb174ce:/home/agent-admin/agent-app# ls -al
+    total 0
+    drwxr-xr-x 1 agent-admin agent-core  46 May 27 14:04 .            # agent-core 로 변경
+    drwxr-x--- 1 agent-admin agent-admin 72 May 27 14:03 ..
+    drwxr-xr-x 1 agent-admin agent-core   0 May 27 14:04 api_keys     # agent-core 로 변경
+    drwxr-xr-x 1 agent-admin agent-core   0 May 27 14:03 bin          # agent-core 로 변경
+    drwxr-xr-x 1 agent-admin agent-core   0 May 27 14:03 upload_files # agent-core 로 변경
+    ```
 
-```bash
-root@90321cb174ce:/home/agent-admin/agent-app# ls -al
-total 0
-drwxr-xr-x 1 agent-admin agent-core  46 May 27 14:04 .
-drwxr-x--- 1 agent-admin agent-admin 72 May 27 14:03 ..
-drwxr-xr-x 1 agent-admin agent-core   0 May 27 14:04 api_keys
-drwxr-xr-x 1 agent-admin agent-core   0 May 27 14:03 bin
-drwxr-xr-x 1 agent-admin agent-core   0 May 27 14:03 upload_files
-```
 
-# 3) upload_files 권한 (agent-common 모두 접근 가능)
-- `chmod` : 디렉토리의 권한 변경
-- `chgrp` : 디렉토리의 그룹 변경
+### 디렉토리 권한 변경 - `upload_files` (agent-common 모두 접근 가능)
+- 변경 전 : 디렉토리 권한 `755(drwxr-xr-x)`, 디렉토리 그룹 `agent-core`
 
-```bash
-chmod 770 /home/agent-admin/agent-app/upload_files
-chgrp agent-common /home/agent-admin/agent-app/upload_files
-```
+    ```bash
+    # 디렉토리의 권한 변경
+    chmod 770 /home/agent-admin/agent-app/upload_files
 
-- `upload_files` 디렉토리의 권한이 755(drwxr-xr-x) -> 770(drwxrwx---) 으로 변경 됨 (그룹사용자 쓰기권한 추가, 기타 사용자 접근 불가)
-- `upload_files` 디렉토리의 그룹이 agent-core -> agent-common 으로 변경 됨
-```bash
-root@90321cb174ce:/home/agent-admin/agent-app# ls -al
-total 0
-drwxr-xr-x 1 agent-admin agent-core   46 May 27 14:04 .
-drwxr-x--- 1 agent-admin agent-admin  72 May 27 14:03 ..
-drwxr-xr-x 1 agent-admin agent-core    0 May 27 14:04 api_keys
-drwxr-xr-x 1 agent-admin agent-core    0 May 27 14:03 bin
-drwxrwx--- 1 agent-admin agent-common  0 May 27 14:03 upload_files
-```
+    # 디렉토리의 그룹 변경
+    chgrp agent-common /home/agent-admin/agent-app/upload_files
+    ```
 
-# 4) api_keys 권한 (agent-core만 접근)
-```bash
-chmod 750 /home/agent-admin/agent-app/api_keys
-chgrp agent-core /home/agent-admin/agent-app/api_keys
-```
 
-- `api_keys` 디렉토리의 권한이 755(drwxr-xr-x) -> 750(drwxr-x---) 으로 변경 됨 (기타 사용자 접근 불가)
-```bash
-root@90321cb174ce:/home/agent-admin/agent-app# ls -al
-total 0
-drwxr-xr-x 1 agent-admin agent-core   46 May 27 14:04 .
-drwxr-x--- 1 agent-admin agent-admin  72 May 27 14:03 ..
-drwxr-x--- 1 agent-admin agent-core    0 May 27 14:04 api_keys
-drwxr-xr-x 1 agent-admin agent-core    0 May 27 14:03 bin
-drwxrwx--- 1 agent-admin agent-common  0 May 27 14:03 upload_files
-```
+- 변경 후 : 디렉토리 권한 `770(drwxrwx---)`, 디렉토리 그룹 `agent-common`
+    ```bash
+    root@90321cb174ce:/home/agent-admin/agent-app# ls -al
+    total 0
+    drwxr-xr-x 1 agent-admin agent-core   46 May 27 14:04 .
+    drwxr-x--- 1 agent-admin agent-admin  72 May 27 14:03 ..
+    drwxr-xr-x 1 agent-admin agent-core    0 May 27 14:04 api_keys
+    drwxr-xr-x 1 agent-admin agent-core    0 May 27 14:03 bin
+    drwxrwx--- 1 agent-admin agent-common  0 May 27 14:03 upload_files # 770, agent-common 으로 변경
+    ```
 
-# 5) 로그 디렉토리 생성
+### 디렉토리 권한 변경 - api_keys (agent-core만 접근)
+- 변경 전 : 디렉토리 권한 `755(drwxr-xr-x)`, 디렉토리 그룹 agent-core
+    ```bash
+    # 디렉토리의 권한 변경
+    chmod 750 /home/agent-admin/agent-app/api_keys
+
+    # 디렉토리의 그룹 변경
+    chgrp agent-core /home/agent-admin/agent-app/api_keys
+    ```
+- 변경 후 : 디렉토리 권한 `750(drwxr-x---)`, 디렉토리 그룹 agent-core
+
+    ```bash
+    root@90321cb174ce:/home/agent-admin/agent-app# ls -al
+    total 0
+    drwxr-xr-x 1 agent-admin agent-core   46 May 27 14:04 .
+    drwxr-x--- 1 agent-admin agent-admin  72 May 27 14:03 ..
+    drwxr-x--- 1 agent-admin agent-core    0 May 27 14:04 api_keys # 750으로 변경
+    drwxr-xr-x 1 agent-admin agent-core    0 May 27 14:03 bin
+    drwxrwx--- 1 agent-admin agent-common  0 May 27 14:03 upload_files
+    ```
+
+---
+
+### 로그 디렉토리
 - 로그 디렉토리 생성
-```bash
-mkdir -p /var/log/agent-app
-```
+    ```bash
+    mkdir -p /var/log/agent-app
+    ```
 
-- 최초 권한 확인
-```bash
-root@90321cb174ce:/var/log/agent-app# ls -al
-total 0
-drwxr-xr-x 1 root root   0 May 27 14:36 .
-drwxr-xr-x 1 root root 112 May 27 14:36 ..
-```
 
-- 디렉토리 소유자 및 권한 변경
-```bash
-chown agent-admin:agent-core /var/log/agent-app
-chmod 770 /var/log/agent-app
-```
+- 로그 디렉토리 소유자 및 권한 변경
+    ```bash
+    # 디렉토리의 소유자 변경
+    chown agent-admin:agent-core /var/log/agent-app
 
-- 변경된 소유자 : root:root -> agent-admin:agent-core
-- 변경된 권한 : 755(drwxr-xr-x) -> 770(drwxrwx---)
-```bash
-root@90321cb174ce:/var/log/agent-app# ls -al
-total 0
-drwxrwx--- 1 agent-admin agent-core   0 May 27 14:36 .
-drwxr-xr-x 1 root        root       112 May 27 14:36 ..
-```
+    # 디렉토리의 권한 변경
+    chmod 770 /var/log/agent-app
+    ```
 
-# 6) ACL 의존성 설치 및 확인
-- ACL : Access Control List, 기본권한(rwx)보다 상세한 권한 설정을 가능하게하는 시스템
-- `setfacl` : 파일이나 디렉토리의 ACL 설정
-- `getfacl` : 파일이나 디렉토리의 ACL 설정 확인
+- 변경 전 : 디렉토리 소유자 `root:root` , 디렉토리 권한 `755(drwxr-xr-x)`
+    ```bash
+    root@90321cb174ce:/var/log/agent-app# ls -al
+    total 0
+    drwxr-xr-x 1 root root   0 May 27 14:36 .
+    drwxr-xr-x 1 root root 112 May 27 14:36 ..
+    ```
+
+- 변경 후 : 디렉토리 소유자 `agent-admin:agent-core` , 디렉토리 권한 `770(drwxrwx---)`
+    ```bash
+    root@90321cb174ce:/var/log/agent-app# ls -al
+    total 0
+    drwxrwx--- 1 agent-admin agent-core   0 May 27 14:36 .  # 770, agent-admin:agent-core 로 변경
+    drwxr-xr-x 1 root        root       112 May 27 14:36 ..
+    ```
+
+### ACL 의존성 설치 및 설정 확인
+- `ACL` 이란?
+
+     : Access Control List, **기본권한(rwx)보다 상세한 권한 설정을 가능**하게하는 시스템
+    - `setfacl` : 파일이나 디렉토리의 ACL 설정
+    - `getfacl` : 파일이나 디렉토리의 ACL 설정 확인
 
 - ACL 의존성 설치
-```bash
-apt-get install acl
-```
+    ```bash
+    apt-get install acl
+    ```
 
-- 권한 확인
-```bash
-root@90321cb174ce:/var/log/agent-app# ls -l /home/agent-admin/agent-app/
-total 0
-drwxr-x--- 1 agent-admin agent-core   0 May 27 14:04 api_keys
-drwxr-xr-x 1 agent-admin agent-core   0 May 27 14:03 bin
-drwxrwx--- 1 agent-admin agent-common 0 May 27 14:03 upload_files
-```
+- `agent-app` 디렉토리 권한 확인
+    ```bash
+    root@90321cb174ce:/var/log/agent-app# ls -l /home/agent-admin/agent-app/
+    total 0
+    drwxr-x--- 1 agent-admin agent-core   0 May 27 14:04 api_keys
+    drwxr-xr-x 1 agent-admin agent-core   0 May 27 14:03 bin
+    drwxrwx--- 1 agent-admin agent-common 0 May 27 14:03 upload_files
+    ```
 
-- ACL 설정 확인
+- ACL 설정 확인 - `upload_files`
+    ```bash
+    root@90321cb174ce:/var/log/agent-app# getfacl /home/agent-admin/agent-app/upload_files/
+    getfacl: Removing leading '/' from absolute path names
+    # file: home/agent-admin/agent-app/upload_files/
+    # owner: agent-admin
+    # group: agent-common
+    user::rwx
+    group::rwx
+    other::---
+    ```
 
-`upload_files`
-```bash
-root@90321cb174ce:/var/log/agent-app# getfacl /home/agent-admin/agent-app/upload_files/
-getfacl: Removing leading '/' from absolute path names
-# file: home/agent-admin/agent-app/upload_files/
-# owner: agent-admin
-# group: agent-common
-user::rwx
-group::rwx
-other::---
-```
-
-`api_keys`
-```bash
-root@90321cb174ce:/var/log/agent-app# getfacl /home/agent-admin/agent-app/api_keys
-getfacl: Removing leading '/' from absolute path names
-# file: home/agent-admin/agent-app/api_keys
-# owner: agent-admin
-# group: agent-core
-user::rwx
-group::r-x
-other::---
-```
+- ACL 설정 확인 - `api_keys`
+    ```bash
+    root@90321cb174ce:/var/log/agent-app# getfacl /home/agent-admin/agent-app/api_keys
+    getfacl: Removing leading '/' from absolute path names
+    # file: home/agent-admin/agent-app/api_keys
+    # owner: agent-admin
+    # group: agent-core
+    user::rwx
+    group::r-x
+    other::---
+    ```
 <br>
 <br>
 
 # 4. 환경변수
 ### 환경변수 설정
+`agent-admin`의 bash 프로필에 환경 변수 추가
 ```bash
-# 1) agent-admin의 bash 프로필에 환경 변수 추가
 nano /home/agent-admin/.bashrc
-
-# 맨 끝에 추가:
-export AGENT_HOME=/home/agent-admin/agent-app
-export AGENT_PORT=15034
-export AGENT_UPLOAD_DIR=$AGENT_HOME/upload_files
-export AGENT_KEY_PATH=$AGENT_HOME/api_keys/t_secret.key
-export AGENT_LOG_DIR=/var/log/agent-app
-
-# 2) 적용
-source /home/agent-admin/.bashrc
-
-# 3) 확인
-echo $환경변수명
-
-```bash
-root@90321cb174ce:~# echo $AGENT_HOME, $AGENT_PORT, $AGENT_UPLOAD_DIR, $AGENT_KEY_PATH, $AGENT_LOG_DIR
-/home/agent-admin/agent-app, 15034, /home/agent-admin/agent-app/upload_files, /home/agent-admin/agent-app/api_keys/t_secret.key, /var/log/agent-app
 ```
+
+- ./bashrc 파일 맨 끝에 추가
+    ```bash
+    export AGENT_HOME=/home/agent-admin/agent-app
+    export AGENT_PORT=15034
+    export AGENT_UPLOAD_DIR=$AGENT_HOME/upload_files
+    export AGENT_KEY_PATH=$AGENT_HOME/api_keys/t_secret.key
+    export AGENT_LOG_DIR=/var/log/agent-app
+    ```
+
+- 저장
+    ```bash
+    source /home/agent-admin/.bashrc
+    ```
+
+- 확인
+    ```bash
+    # echo $환경변수명
+
+    root@90321cb174ce:~# echo $AGENT_HOME, $AGENT_PORT, $AGENT_UPLOAD_DIR, $AGENT_KEY_PATH, $AGENT_LOG_DIR
+
+    /home/agent-admin/agent-app, 15034, /home/agent-admin/agent-app/upload_files, /home/agent-admin/agent-app/api_keys/t_secret.key, /var/log/agent-app
+    ```
 
 
 ### API 키 생성
-![alt text](docs/screenshots/b1-1_사용자%20전환(root%20->%20agent-admin).png)
+
 - 사용자 전환 (root -> agent-admin)
+    ```bash
+    root@90321cb174ce:~# su - agent-admin
+    agent-admin@90321cb174ce:~$
+    ```
     - `su` : Switch User, 다른 사용자로 전환하되 기존 사용자의 환경변수 유지 (옵션없이 su 만 입력하면 root 로 전환)
     - `su -` :다른 사용자로 완전히 전환하며, 환경변수와 홈 디렉토리 까지 변경 됨 (사용자명 없으면 root로 완전히 전환)
     - `sudo` : SuperUser Do, 권한만 빌려서 단일 명령어 실행
 
     - `exit` : exit 명령으로 logout 후 원래 계정으로 돌아온다.
-    ```bash
-    root@90321cb174ce:~# su - agent-admin
-    agent-admin@90321cb174ce:~$
-    ```
 
 - 키 파일 생성
     ```bash
     echo "agent_api_key_test" > /home/agent-admin/agent-app/api_keys/t_secret.key
     ```
 
-- 호스트로 나가서 권한 설정
+- 컨테이너로 나가서 권한 설정
     ```bash
     exit
     chmod 640 /home/agent-admin/agent-app/api_keys/t_secret.key
@@ -600,7 +596,7 @@ root@90321cb174ce:~# echo $AGENT_HOME, $AGENT_PORT, $AGENT_UPLOAD_DIR, $AGENT_KE
     ```bash
     cat /home/agent-admin/agent-app/api_keys/t_secret.key
     ```
-
+![alt text](docs/screenshots/b1-1_사용자%20전환(root%20->%20agent-admin).png)
 
 ### 앱 실행
 - 호스트 터미널에서 agent-app.zip 다운로드 후 컨테이너의 $AGENT_HOME에 복사
@@ -610,18 +606,22 @@ root@90321cb174ce:~# echo $AGENT_HOME, $AGENT_PORT, $AGENT_UPLOAD_DIR, $AGENT_KE
     
     Successfully copied 14MB to mission-b1-1:/home/agent-admin
     ```
-
+- 컨테이너 접속
+    ```bash
+    docker exec -it mission-b1-1 /bin/bash
+    ```
 - agent-admin으로 실행
     ```bash
     su - agent-admin
     cd $AGENT_HOME
-    python3 agent_app.py
+    ./agent-app-linux-x86
     ```
 
 
 
 
-# 3) 정상 출력 확인:
+### 정상 출력 확인
+```bash
 # > Starting Agent Boot Sequence...
 # [1/5] Checking User Account [OK]
 # [2/5] Verifying Environment Variables [OK]
@@ -630,9 +630,12 @@ root@90321cb174ce:~# echo $AGENT_HOME, $AGENT_PORT, $AGENT_UPLOAD_DIR, $AGENT_KE
 # [5/5] Verifying Log Permission [OK]
 # All Boot Checks Passed!
 # Agent READY
+```
 
-# 4) 다른 터미널에서 포트 확인
+### 다른 터미널에서 포트 확인
+```bash
 ss -tulnp | grep 15034
+
 # 결과: 0.0.0.0:15034 LISTEN
 ```
 <br>
