@@ -191,24 +191,24 @@ root@abc123:/# service ssh restart
 Root 로그인도 `sshd_config` 파일에서 수정할 수 있다.
 ### 1. 권한 변경 (전)
     
-    `PermitRootLogin` 의 주석을 해제하고, `prohibit-password` 를 `no` 로 변경한다.
-    ```bash
-    nano /etc/ssh/sshd_config
-    ```
+`PermitRootLogin` 의 주석을 해제하고, `prohibit-password` 를 `no` 로 변경한다.
+```bash
+nano /etc/ssh/sshd_config
+```
 
-    ![alt text](docs/screenshots/b1-1_PermitRootLogin%20변경%20전.png)
+![alt text](docs/screenshots/b1-1_PermitRootLogin%20변경%20전.png)
 
 
 ### 2. 권한 변경 (후)
-    ```bash
-    root@abc123:/# cat /etc/ssh/sshd_config | grep PermitRootLogin
+```bash
+root@abc123:/# cat /etc/ssh/sshd_config | grep PermitRootLogin
     
-    PermitRootLogin no
+PermitRootLogin no
 
-    # the setting of "PermitRootLogin prohibit-password".
-    ```
+# the setting of "PermitRootLogin prohibit-password".
+```
 
-    ![alt text](docs/screenshots/b1-1_PermitRootLogin%20변경%20후.png)
+![alt text](docs/screenshots/b1-1_PermitRootLogin%20변경%20후.png)
 
 ### cf. PermitRootLogin 의 옵션
     - yes : Root 로그인 허용 (비밀번호 가능)  
@@ -216,11 +216,11 @@ Root 로그인도 `sshd_config` 파일에서 수정할 수 있다.
     - prohibit-password : Root 로그인은 허용하되, 비밀번호 인증은 금지한다. (공개키 인증으로만 접속가능)
 
 ### 3. 서비스 재시작
-    ```bash
-    root@abc123:/# service ssh restart
+```bash
+root@abc123:/# service ssh restart
     
-    * Restarting OpenBSD Secure Shell server sshd   
-    ```
+* Restarting OpenBSD Secure Shell server sshd   
+```
 
 
 <br>
@@ -350,7 +350,7 @@ uid=1003(agent-test) gid=1005(agent-test) groups=1005(agent-test),1001(agent-com
     ```
 
 ### 계정 삭제
-- `-r` : 설정했던 하위 옵션까지 삭제해라
+- `-r` : 설정했던 하위 옵션까지 삭제
 
     ```bash
     # userdel -r <계정 명>
@@ -462,7 +462,7 @@ api_keys  bin  upload_files
     drwxrwx--- 1 agent-admin agent-common  0 May 27 14:03 upload_files # 770, agent-common 으로 변경
     ```
 
-### 디렉토리 권한 변경 - api_keys (agent-core만 접근)
+### 디렉토리 권한 변경 - `api_keys` (agent-core만 접근)
 `agent-admin:agent-core`와 그룹 쓰기로 묶어서, admin/dev만 내용을 보고 쓸 수 있게 한다.
 - 변경 전 : 디렉토리 권한 `755(drwxr-xr-x)`, 디렉토리 그룹 agent-core
     ```bash
@@ -570,7 +570,7 @@ api_keys  bin  upload_files
 nano /home/agent-admin/.bashrc
 ```
 
-- ./bashrc 파일 맨 끝에 추가
+- `/.bashrc` 파일 맨 끝에 추가
     ```bash
     export AGENT_HOME=/home/agent-admin/agent-app
     export AGENT_PORT=15034
@@ -833,16 +833,16 @@ tcp   LISTEN 0      1            0.0.0.0:15034      0.0.0.0:*    users:(("agent-
 
 2. 경고 체크 (경고만 출력)
     - 방화벽 활성화 상태 확인
-    - 비활성 상태이거나 도구가 없으면 [WARNING] 만 남기고 스크립트는 계속 진행
+    - 비활성 상태이거나 도구가 없으면 `[WARNING]` 만 남기고 스크립트는 계속 진행
 
 3. 자원 수집
-    - CPU 사용률(%) : top -bn1의 Cpu(s) 라인에서 idle 퍼센트를 뽑고, 100 - idle로 사용률을 계산
-    - 메모리 사용률(%) : free 명령의 Mem: 라인에서 used/total * 100으로 계산
-    - 디스크 사용률(%) ; df -P /로 루트 파티션을 기준으로 사용률(%)을 가져옴
+    - CPU 사용률(%) : `top -bn1`의 `Cpu(s)` 라인에서 idle 퍼센트를 뽑고, `100 - idle`로 사용률을 계산
+    - 메모리 사용률(%) : `free` 명령의 `Mem`: 라인에서 `used/total * 100`으로 계산
+    - 디스크 사용률(%) ; `df -P /`로 `루트 파티션`을 기준으로 사용률(%)을 가져옴
 4. 임계값 경고
-    - CPU > 20%: [WARNING] CPU threshold exceeded
-    - MEM > 10%: [WARNING] MEM threshold exceeded
-    - DISK_USED > 80%: [WARNING] DISK threshold exceeded
+    - `CPU > 20%: [WARNING] CPU threshold exceeded`
+    - `MEM > 10%: [WARNING] MEM threshold exceeded`
+    - `DISK_USED > 80%: [WARNING] DISK threshold exceeded`
 5. 로그 기록
     - `/var/log/agent-app/monitor.log` 에 한줄씩 누적 기록 됨
     - 포맷 : `[YYYY-MM-DD HH:MM:SS] PID:.. CPU:..% MEM:..% DISK_USED:..%`
@@ -855,7 +855,10 @@ tcp   LISTEN 0      1            0.0.0.0:15034      0.0.0.0:*    users:(("agent-
 
 - 권한 설정
     ```bash
+    # 소유자 설정
     chown agent-dev:agent-core /home/agent-admin/agent-app/bin/monitor.sh
+    
+    # 권한 설정
     chmod 750 /home/agent-admin/agent-app/bin/monitor.sh
     ```
 

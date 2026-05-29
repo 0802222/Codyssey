@@ -78,6 +78,35 @@ mkdir -p "$AGENT_LOG_DIR"
 printf '[%s] PID:%s CPU:%s%% MEM:%s%% DISK_USED:%s%%\n' \
   "$timestamp" "$APP_PID" "$CPU_USAGE" "$MEM_USAGE" "$DISK_USAGE" >> "$LOG_FILE"
 
+# 6. 로그 파일 용량 관리 (최대 10MB / 10개 파일 유지)
+
+MAX_SIZE=$((10 * 1024 * 1024))  # 10MB
+LOG_DIR="/var/log/agent-app"
+LOG_FILE="$LOG_DIR/monitor.log"
+
+# 1) 현재 monitor.log가 10MB를 넘으면 롤링
+if [ -f "$LOG_FILE" ]; then
+  CURRENT_SIZE=$(stat -c%s "$LOG_FILE")
+  if [ "$CURRENT_SIZE" -gt "$MAX_SIZE" ]; then
+    # 타임스탬프 붙여서 백업 파일로 이동
+    TS="$(date '+%Y%m%d%H%M%S')"
+    mv "$LOG_FILE" "$LOG_DIR/monitor.log.$TS"
+  fi
+fi
+
+# 2) 기존 롤링 파일 개수가 10개를 넘으면 오래된 것부터 삭제
+LOG_ROLLED_FILES=($(ls -1t "$LOG_DIR"/monitor.log.* 2>/dev/null))
+
+COUNT=${#LOG_ROLLED_FILES[@]}
+MAX_FILES=10
+
+if [ "$COUNT" -gt "$MAX_FILES" ]; then
+  # 11개 이상이면 11번째 이후(인덱스 10부터)를 모두 삭제
+  for ((i=MAX_FILES; i<COUNT; i++)); do
+    rm -f "${LOG_ROLLED_FILES[$i]}"
+  done
+fi
+
 # 콘솔 출력
 echo "====== SYSTEM MONITOR RESULT ======"
 echo
