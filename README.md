@@ -22,7 +22,7 @@ Codyssey 실습환경은 프로그램 설치가 제한되어 있어서,
 - docker version 확인
     ```bash
     # docker --version
-    c08022220523@c3r2s1 ~ % docker --version
+    docker --version
     
     Docker version 28.5.2, build ecc6942
     ```
@@ -33,7 +33,7 @@ Codyssey 실습환경은 프로그램 설치가 제한되어 있어서,
 
     ```bash
     # docker run
-    c08022220523@c3r2s1 ~ % docker run -it --name mission-b1-1 --cap-add=NET_ADMIN ubuntu:latest /bin/bash
+    docker run -it --name mission-b1-1 --cap-add=NET_ADMIN ubuntu:latest /bin/bash
     ```
     - 기본 도커 컨테이너는 NET_ADMIN 같은 네트워크 관리 capability 가 막혀 있어서 `iptables-restore` 가 Permission denied 가 난다.
     - `--cap-add=NET_ADMIN` 을 주면 해당 컨테이너에 "네트워크 관리" 권한이 붙고, 그안에서 iptables/ufw 명령이 통과 할 수 있게 된다.
@@ -54,7 +54,7 @@ Codyssey 실습환경은 프로그램 설치가 제한되어 있어서,
     ```
 - 컨테이너 나가기 (혹은 Ctrl + D) 
     ```bash
-    root@a1b2c3d4e5f6:/# exit
+    root@abc123:/# exit
     ```
 - 컨테이너 실행만 하기 (백그라운드)
     ```bash
@@ -115,7 +115,7 @@ cat /etc/ssh/sshd_config
 - SSH 데몬 재실행
     ```bash
     # service ssh restart
-    root@945e0b2ff039:/# service ssh restart
+    root@abc123:/# service ssh restart
     
     * Restarting OpenBSD Secure Shell server sshd  
     ```
@@ -182,7 +182,7 @@ Root 로그인도 `sshd_config` 파일에서 수정할 수 있다.
 
 - 권한 변경 (후)
     ```bash
-    root@d1adc33ffdda:/# cat /etc/ssh/sshd_config | grep PermitRootLogin
+    root@abc123:/# cat /etc/ssh/sshd_config | grep PermitRootLogin
     
     PermitRootLogin no
 
@@ -197,7 +197,7 @@ Root 로그인도 `sshd_config` 파일에서 수정할 수 있다.
 
 - 서비스 재시작
     ```bash
-    root@d1adc33ffdda:/# service ssh restart
+    root@abc123:/# service ssh restart
     
     * Restarting OpenBSD Secure Shell server sshd   
     ```
@@ -225,14 +225,14 @@ Root 로그인도 `sshd_config` 파일에서 수정할 수 있다.
 - UFW 활성화
     ```bash
     # ufw enable
-    root@07c0ae693e1e:/# ufw enable
+    root@abc123:/# ufw enable
     
     Firewall is active and enabled on system startup
     ```
 - SSH 포트 허용 (20022)
     ```bash
     # ufw allow 20022/tcp
-    root@07c0ae693e1e:/# ufw allow 20022/tcp
+    root@abc123:/# ufw allow 20022/tcp
     
     Rule added
     Rule added (v6)
@@ -240,7 +240,7 @@ Root 로그인도 `sshd_config` 파일에서 수정할 수 있다.
 - APP 포트 허용 (15034)
     ```bash
     # ufw allow 15034/tcp
-    root@07c0ae693e1e:/# ufw allow 15034/tcp
+    root@abc123:/# ufw allow 15034/tcp
 
     Rule added
     Rule added (v6)
@@ -260,11 +260,11 @@ Root 로그인도 `sshd_config` 파일에서 수정할 수 있다.
 
 ```bash
 # 그룹 생성
-root@07c0ae693e1e:/# groupadd agent-common
-root@07c0ae693e1e:/# groupadd agent-core
+root@abc123:/# groupadd agent-common
+root@abc123:/# groupadd agent-core
 
 # 그룹 생성 확인
-root@07c0ae693e1e:/# getent group | grep agent
+root@abc123:/# getent group | grep agent
 
 agent-common:x:1001:
 agent-core:x:1002:
@@ -276,9 +276,9 @@ agent-core:x:1002:
 - agent-test : 테스트 수행
 
     ```bash
-    root@07c0ae693e1e:/# useradd -m -s /bin/bash agent-admin
-    root@07c0ae693e1e:/# useradd -m -s /bin/bash agent-dev  
-    root@07c0ae693e1e:/# useradd -m -s /bin/bash agent-test
+    root@abc123:/# useradd -m -s /bin/bash agent-admin
+    root@abc123:/# useradd -m -s /bin/bash agent-dev  
+    root@abc123:/# useradd -m -s /bin/bash agent-test
     ```
 
 
@@ -289,25 +289,25 @@ agent-core:x:1002:
 
     ```bash
     # agent-common
-    root@07c0ae693e1e:/# usermod -aG agent-common agent-admin
-    root@07c0ae693e1e:/# usermod -aG agent-common agent-dev  
-    root@07c0ae693e1e:/# usermod -aG agent-common agent-test
+    root@abc123:/# usermod -aG agent-common agent-admin
+    root@abc123:/# usermod -aG agent-common agent-dev  
+    root@abc123:/# usermod -aG agent-common agent-test
 
     # agent-core
-    root@07c0ae693e1e:/# usermod -aG agent-core agent-admin 
-    root@07c0ae693e1e:/# usermod -aG agent-core agent-dev 
+    root@abc123:/# usermod -aG agent-core agent-admin 
+    root@abc123:/# usermod -aG agent-core agent-dev 
     ```
 
 ### 그룹 설정 후 계정 확인 - `id <계정 명>`
 ```bash
 # id <계정 명>
-root@07c0ae693e1e:/# id agent-admin
+root@abc123:/# id agent-admin
 uid=1001(agent-admin) gid=1003(agent-admin) groups=1003(agent-admin),1001(agent-common),1002(agent-core)
 
-root@07c0ae693e1e:/# id agent-dev  
+root@abc123:/# id agent-dev  
 uid=1002(agent-dev) gid=1004(agent-dev) groups=1004(agent-dev),1001(agent-common),1002(agent-core)
 
-root@07c0ae693e1e:/# id agent-test
+root@abc123:/# id agent-test
 uid=1003(agent-test) gid=1005(agent-test) groups=1005(agent-test),1001(agent-common)
 ```
 ![alt text](docs/screenshots/b1-1%20그룹설정%20후%20계정%20확인.png)
@@ -384,8 +384,8 @@ mkdir -p /home/agent-admin/agent-app/upload_files
 mkdir -p /home/agent-admin/agent-app/api_keys
 
 # 디렉토리 확인
-root@90321cb174ce:/# cd /home/agent-admin/agent-app
-root@90321cb174ce:/home/agent-admin/agent-app# ls   
+root@abc123:/# cd /home/agent-admin/agent-app
+root@abc123:/home/agent-admin/agent-app# ls   
 api_keys  bin  upload_files
 ```
 
@@ -402,7 +402,7 @@ api_keys  bin  upload_files
 - 변경 후 : 소유자 agent-admin, 그룹 `agent-core (admin, dev)`
     
     ```bash
-    root@90321cb174ce:/home/agent-admin/agent-app# ls -al
+    root@abc123:/home/agent-admin/agent-app# ls -al
     total 0
     drwxr-xr-x 1 agent-admin agent-core  46 May 27 14:04 .            # agent-core 로 변경
     drwxr-x--- 1 agent-admin agent-admin 72 May 27 14:03 ..
@@ -426,7 +426,7 @@ api_keys  bin  upload_files
 
 - 변경 후 : 디렉토리 권한 `770(drwxrwx---)`, 디렉토리 그룹 `agent-common`
     ```bash
-    root@90321cb174ce:/home/agent-admin/agent-app# ls -al
+    root@abc123:/home/agent-admin/agent-app# ls -al
     total 0
     drwxr-xr-x 1 agent-admin agent-core   46 May 27 14:04 .
     drwxr-x--- 1 agent-admin agent-admin  72 May 27 14:03 ..
@@ -447,7 +447,7 @@ api_keys  bin  upload_files
 - 변경 후 : 디렉토리 권한 `750(drwxr-x---)`, 디렉토리 그룹 agent-core
 
     ```bash
-    root@90321cb174ce:/home/agent-admin/agent-app# ls -al
+    root@abc123:/home/agent-admin/agent-app# ls -al
     total 0
     drwxr-xr-x 1 agent-admin agent-core   46 May 27 14:04 .
     drwxr-x--- 1 agent-admin agent-admin  72 May 27 14:03 ..
@@ -476,7 +476,7 @@ api_keys  bin  upload_files
 
 - 변경 전 : 디렉토리 소유자 `root:root` , 디렉토리 권한 `755(drwxr-xr-x)`
     ```bash
-    root@90321cb174ce:/var/log/agent-app# ls -al
+    root@abc123:/var/log/agent-app# ls -al
     total 0
     drwxr-xr-x 1 root root   0 May 27 14:36 .
     drwxr-xr-x 1 root root 112 May 27 14:36 ..
@@ -484,7 +484,7 @@ api_keys  bin  upload_files
 
 - 변경 후 : 디렉토리 소유자 `agent-admin:agent-core` , 디렉토리 권한 `770(drwxrwx---)`
     ```bash
-    root@90321cb174ce:/var/log/agent-app# ls -al
+    root@abc123:/var/log/agent-app# ls -al
     total 0
     drwxrwx--- 1 agent-admin agent-core   0 May 27 14:36 .  # 770, agent-admin:agent-core 로 변경
     drwxr-xr-x 1 root        root       112 May 27 14:36 ..
@@ -504,7 +504,7 @@ api_keys  bin  upload_files
 
 - `agent-app` 디렉토리 권한 확인
     ```bash
-    root@90321cb174ce:/var/log/agent-app# ls -l /home/agent-admin/agent-app/
+    root@abc123:/var/log/agent-app# ls -l /home/agent-admin/agent-app/
     total 0
     drwxr-x--- 1 agent-admin agent-core   0 May 27 14:04 api_keys
     drwxr-xr-x 1 agent-admin agent-core   0 May 27 14:03 bin
@@ -513,7 +513,7 @@ api_keys  bin  upload_files
 
 - ACL 설정 확인 - `upload_files`
     ```bash
-    root@90321cb174ce:/var/log/agent-app# getfacl /home/agent-admin/agent-app/upload_files/
+    root@abc123:/var/log/agent-app# getfacl /home/agent-admin/agent-app/upload_files/
     getfacl: Removing leading '/' from absolute path names
     # file: home/agent-admin/agent-app/upload_files/
     # owner: agent-admin
@@ -525,7 +525,7 @@ api_keys  bin  upload_files
 
 - ACL 설정 확인 - `api_keys`
     ```bash
-    root@90321cb174ce:/var/log/agent-app# getfacl /home/agent-admin/agent-app/api_keys
+    root@abc123:/var/log/agent-app# getfacl /home/agent-admin/agent-app/api_keys
     getfacl: Removing leading '/' from absolute path names
     # file: home/agent-admin/agent-app/api_keys
     # owner: agent-admin
@@ -562,7 +562,7 @@ nano /home/agent-admin/.bashrc
     ```bash
     # echo $환경변수명
 
-    root@90321cb174ce:~# echo $AGENT_HOME, $AGENT_PORT, $AGENT_UPLOAD_DIR, $AGENT_KEY_PATH, $AGENT_LOG_DIR
+    root@abc123:~# echo $AGENT_HOME, $AGENT_PORT, $AGENT_UPLOAD_DIR, $AGENT_KEY_PATH, $AGENT_LOG_DIR
 
     /home/agent-admin/agent-app, 15034, /home/agent-admin/agent-app/upload_files, /home/agent-admin/agent-app/api_keys/t_secret.key, /var/log/agent-app
     ```
@@ -572,8 +572,8 @@ nano /home/agent-admin/.bashrc
 
 - 사용자 전환 (root -> agent-admin)
     ```bash
-    root@90321cb174ce:~# su - agent-admin
-    agent-admin@90321cb174ce:~$
+    root@abc123:~# su - agent-admin
+    agent-admin@abc123:~$
     ```
     - `su` : Switch User, 다른 사용자로 전환하되 기존 사용자의 환경변수 유지 (옵션없이 su 만 입력하면 root 로 전환)
     - `su -` :다른 사용자로 완전히 전환하며, 환경변수와 홈 디렉토리 까지 변경 됨 (사용자명 없으면 root로 완전히 전환)
@@ -601,8 +601,8 @@ nano /home/agent-admin/.bashrc
 ### 앱 실행
 - 호스트 터미널에서 agent-app.zip 다운로드 후 컨테이너의 $AGENT_HOME에 복사
     ```bash
-    c08022220523@c6r7s8 ~ % cd Downloads
-    c08022220523@c6r7s8 Downloads % docker cp agent-app mission-b1-1:/home/agent-admin
+    cd Downloads
+    docker cp agent-app mission-b1-1:/home/agent-admin
     
     Successfully copied 14MB to mission-b1-1:/home/agent-admin
     ```
@@ -616,23 +616,158 @@ nano /home/agent-admin/.bashrc
     cd $AGENT_HOME
     ./agent-app-linux-x86
     ```
+- Error - `AGENT_KEY_PATH` 변경   
+    최초 요구사항인 `t_secret.key` 로 앱실행 시 아래와 같은 에러 발생하여 이에 맞게 `secret.key` 로 이름을 바꿔준다.
+
+    ```bash
+    agent-admin@abc123:~/agent-app$ ./agent-app-linux-x86 
+
+    >>> Starting Agent Boot Sequence...
+    [1/5] Checking User Account               [OK]
+    ... Running as service user 'agent-admin' (uid=1001)
+    [2/5] Verifying Environment Variables     [OK]
+    ... All required Envs correct
+    [3/5] Checking Required Files             [FAIL]
+    >>> Missing File: secret.key
+    >>>    (Expected location: /home/agent-admin/agent-app/api_keys/secret.key) # 요구사항 : secret.key 로 이름 바꾸기
+    [4/5] Checking Port Availability          [FAIL]
+    >>> Skipped due to previous critical failure.
+    [5/5] Verifying Log Permission            [FAIL]
+    >>> Skipped due to previous critical failure.
+    --------------------------------------------------
+    System Boot Failed. Process Terminated.
+    
+    ```
+    ```bash
+    agent-admin@abc123:~/agent-app$ echo agent_api_key_test
+    
+    agent_api_key_test
+    ```
+    - 변경 전 : $AGENT_HOME/api_keys/t_secret.key
+    - 변경 후 : $AGENT_HOME/api_keys/secret.key
 
 
-
-
-### 정상 출력 확인
+### 앱실행 & 정상 출력 확인
 ```bash
-# > Starting Agent Boot Sequence...
-# [1/5] Checking User Account [OK]
-# [2/5] Verifying Environment Variables [OK]
-# [3/5] Checking Required Files [OK]
-# [4/5] Checking Port Availability [OK]
-# [5/5] Verifying Log Permission [OK]
-# All Boot Checks Passed!
-# Agent READY
+# agent-admin 으로 실행할 때
+agent-admin@abc123:~/agent-app$ ./agent-app-linux-x86
+>>> Starting Agent Boot Sequence...
+[1/5] Checking User Account               [OK]
+   ... Running as service user 'agent-admin' (uid=1001)
+[2/5] Verifying Environment Variables     [OK]
+   ... All required Envs correct
+[3/5] Checking Required Files             [OK]
+   ... Verified 'secret.key' with correct key string.
+[4/5] Checking Port Availability          [OK]
+   ... Port 15034 is available.
+[5/5] Verifying Log Permission            [OK]
+   ... Log directory is writable: /var/log/agent-app
+------------------------------------------------------------
+All Boot Checks Passed!
+Agent READY
+
+# root 로 실행할 때 (실패)
+root@abc123:/home/agent-admin/agent-app# ./agent-app-linux-x86 
+>>> Starting Agent Boot Sequence...
+[1/5] Checking User Account               [FAIL]
+   >>> Error: Running as 'root' is forbidden.
+[2/5] Verifying Environment Variables     [FAIL]
+   >>> Skipped due to previous critical failure.
+[3/5] Checking Required Files             [FAIL]
+   >>> Skipped due to previous critical failure.
+[4/5] Checking Port Availability          [FAIL]
+   >>> Skipped due to previous critical failure.
+[5/5] Verifying Log Permission            [FAIL]
+   >>> Skipped due to previous critical failure.
+--------------------------------------------------
+System Boot Failed. Process Terminated.
+```
+![alt text](docs/screenshots/b1-1_secret.key%20이름변경%20후%20앱%20정상%20실행.png)
+
+### 앱 : 부하시뮬레이션
+앱이 자동으로 CPU 레벨과 메모리 사용량을 25MB 씩 주기적으로 올렸다가(UP), 최대치에서 다시 내려오는(DOWN) 부하 시뮬레이션 진행
+
+```bash
+# UP
+2026-05-29 15:48:27,665 [INFO] [SafetyGuard] Process priority lowered (nice=10).
+2026-05-29 15:48:27,666 [INFO] Agent listening at port 15034
+2026-05-29 15:48:27,666 [INFO] === Agent Worker Started ===
+2026-05-29 15:48:27,666 [INFO]    > Cycle: 0 -> 256MB/Lv10 -> 0
+2026-05-29 15:48:27,666 [INFO] --- Step Info: Mode=UP, CPU Lv=1, Mem=0MB ---
+2026-05-29 15:48:27,704 [INFO] [Memory] Increasing... (+25 MB) Total: 25 MB
+2026-05-29 15:48:27,705 [INFO] [CPU] Occupy core for 1s (Level 1)
+2026-05-29 15:48:29,713 [INFO] --- Step Info: Mode=UP, CPU Lv=2, Mem=25MB ---
+2026-05-29 15:48:29,752 [INFO] [Memory] Increasing... (+25 MB) Total: 50 MB
+2026-05-29 15:48:29,752 [INFO] [CPU] Occupy core for 2s (Level 2)
+2026-05-29 15:48:32,759 [INFO] --- Step Info: Mode=UP, CPU Lv=3, Mem=50MB ---
+2026-05-29 15:48:32,778 [INFO] [Memory] Increasing... (+25 MB) Total: 75 MB
+2026-05-29 15:48:32,778 [INFO] [CPU] Occupy core for 3s (Level 3)
+2026-05-29 15:48:36,786 [INFO] --- Step Info: Mode=UP, CPU Lv=4, Mem=75MB ---
+2026-05-29 15:48:36,828 [INFO] [Memory] Increasing... (+25 MB) Total: 100 MB
+2026-05-29 15:48:36,828 [INFO] [CPU] Occupy core for 4s (Level 4)
+2026-05-29 15:48:41,836 [INFO] --- Step Info: Mode=UP, CPU Lv=5, Mem=100MB ---
+2026-05-29 15:48:41,877 [INFO] [Memory] Increasing... (+25 MB) Total: 125 MB
+2026-05-29 15:48:41,877 [INFO] [CPU] Occupy core for 5s (Level 5)
+2026-05-29 15:48:47,884 [INFO] --- Step Info: Mode=UP, CPU Lv=6, Mem=125MB ---
+2026-05-29 15:48:47,924 [INFO] [Memory] Increasing... (+25 MB) Total: 150 MB
+2026-05-29 15:48:47,924 [INFO] [CPU] Occupy core for 5s (Level 6)
+2026-05-29 15:48:53,931 [INFO] --- Step Info: Mode=UP, CPU Lv=7, Mem=150MB ---
+2026-05-29 15:48:53,972 [INFO] [Memory] Increasing... (+25 MB) Total: 175 MB
+2026-05-29 15:48:53,972 [INFO] [CPU] Occupy core for 5s (Level 7)
+2026-05-29 15:48:59,980 [INFO] --- Step Info: Mode=UP, CPU Lv=8, Mem=175MB ---
+2026-05-29 15:49:00,023 [INFO] [Memory] Increasing... (+25 MB) Total: 200 MB
+2026-05-29 15:49:00,023 [INFO] [CPU] Occupy core for 5s (Level 8)
+2026-05-29 15:49:06,029 [INFO] --- Step Info: Mode=UP, CPU Lv=9, Mem=200MB ---
+2026-05-29 15:49:06,072 [INFO] [Memory] Increasing... (+25 MB) Total: 225 MB
+2026-05-29 15:49:06,072 [INFO] [CPU] Occupy core for 5s (Level 9)
+2026-05-29 15:49:12,078 [INFO] --- Step Info: Mode=UP, CPU Lv=10, Mem=225MB ---
+2026-05-29 15:49:12,120 [INFO] [Memory] Increasing... (+25 MB) Total: 250 MB
+2026-05-29 15:49:12,120 [INFO] [CPU] Occupy core for 5s (Level 10)
+2026-05-29 15:49:18,127 [INFO] --- Step Info: Mode=UP, CPU Lv=10, Mem=250MB ---
+2026-05-29 15:49:18,135 [INFO] [Memory] Increasing... (+25 MB) Total: 275 MB
+2026-05-29 15:49:18,135 [INFO] [CPU] Occupy core for 5s (Level 10)
+# DOWN
+2026-05-29 15:49:24,142 [INFO] >>> PEAK REACHED (Max Load). Switching to RAMP DOWN. ▼ <<<
+2026-05-29 15:49:24,146 [INFO] --- Step Info: Mode=DOWN, CPU Lv=9, Mem=275MB ---
+2026-05-29 15:49:24,147 [INFO] [Memory] Releasing... (-25MB) Total: 250MB
+2026-05-29 15:49:24,147 [INFO] [CPU] Occupy core for 5s (Level 9)
+2026-05-29 15:49:30,153 [INFO] --- Step Info: Mode=DOWN, CPU Lv=8, Mem=250MB ---
+2026-05-29 15:49:30,154 [INFO] [Memory] Releasing... (-25MB) Total: 225MB
+2026-05-29 15:49:30,154 [INFO] [CPU] Occupy core for 5s (Level 8)
+2026-05-29 15:49:36,161 [INFO] --- Step Info: Mode=DOWN, CPU Lv=7, Mem=225MB ---
+2026-05-29 15:49:36,162 [INFO] [Memory] Releasing... (-25MB) Total: 200MB
+2026-05-29 15:49:36,162 [INFO] [CPU] Occupy core for 5s (Level 7)
+2026-05-29 15:49:42,170 [INFO] --- Step Info: Mode=DOWN, CPU Lv=6, Mem=200MB ---
+2026-05-29 15:49:42,171 [INFO] [Memory] Releasing... (-25MB) Total: 175MB
+2026-05-29 15:49:42,171 [INFO] [CPU] Occupy core for 5s (Level 6)
+2026-05-29 15:49:48,178 [INFO] --- Step Info: Mode=DOWN, CPU Lv=5, Mem=175MB ---
+2026-05-29 15:49:48,179 [INFO] [Memory] Releasing... (-25MB) Total: 150MB
+2026-05-29 15:49:48,179 [INFO] [CPU] Occupy core for 5s (Level 5)
+2026-05-29 15:49:54,187 [INFO] --- Step Info: Mode=DOWN, CPU Lv=4, Mem=150MB ---
+2026-05-29 15:49:54,188 [INFO] [Memory] Releasing... (-25MB) Total: 125MB
+2026-05-29 15:49:54,188 [INFO] [CPU] Occupy core for 4s (Level 4)
+2026-05-29 15:49:59,196 [INFO] --- Step Info: Mode=DOWN, CPU Lv=3, Mem=125MB ---
+2026-05-29 15:49:59,196 [INFO] [Memory] Releasing... (-25MB) Total: 100MB
+2026-05-29 15:49:59,197 [INFO] [CPU] Occupy core for 3s (Level 3)
+2026-05-29 15:50:03,204 [INFO] --- Step Info: Mode=DOWN, CPU Lv=2, Mem=100MB ---
+2026-05-29 15:50:03,205 [INFO] [Memory] Releasing... (-25MB) Total: 75MB
+2026-05-29 15:50:03,205 [INFO] [CPU] Occupy core for 2s (Level 2)
+2026-05-29 15:50:06,213 [INFO] --- Step Info: Mode=DOWN, CPU Lv=1, Mem=75MB ---
+2026-05-29 15:50:06,214 [INFO] [Memory] Releasing... (-25MB) Total: 50MB
+2026-05-29 15:50:06,214 [INFO] [CPU] Occupy core for 1s (Level 1)
+2026-05-29 15:50:08,222 [INFO] --- Step Info: Mode=DOWN, CPU Lv=0, Mem=50MB ---
+2026-05-29 15:50:08,223 [INFO] [Memory] Releasing... (-25MB) Total: 25MB
+2026-05-29 15:50:09,229 [INFO] --- Step Info: Mode=DOWN, CPU Lv=0, Mem=25MB ---
+2026-05-29 15:50:09,230 [INFO] [Memory] Releasing... (-25MB) Total: 0MB
+# 다시 UP
+2026-05-29 15:50:10,236 [INFO] >>> BOTTOM REACHED (Idle). Switching to RAMP UP. ▲ <<<
+2026-05-29 15:50:10,236 [INFO] --- Step Info: Mode=UP, CPU Lv=1, Mem=0MB ---
+2026-05-29 15:50:10,274 [INFO] [Memory] Increasing... (+25 MB) Total: 25 MB
+2026-05-29 15:50:10,275 [INFO] [CPU] Occupy core for 1s (Level 1)
+
 ```
 
-### 다른 터미널에서 포트 확인
+### 다른 터미널에서 포트 확인 ㅇㄹㅇㄹㄹㅇㄹㅇㄹㅇㄹㅇㄹㅇ
 ```bash
 ss -tulnp | grep 15034
 
@@ -649,29 +784,111 @@ ss -tulnp | grep 15034
 
 ### monitor.sh 의 5가지 기능
 1. 헬스 체크 (실패 시 종료)
-    - 프로세스 : `agent_app.py` 가 실행중 인지 확인
-    - 포트 : 15034 수신중 인지 확인
+- 프로세스 : `agent_app.py` 가 실행중 인지 확인
+- 포트 : 15034 수신중 인지 확인
 2. 경고 체크 (경고만 출력)
-    - 방화벽 활성화
+- 방화벽 활성화
 3. 자원 수집
-    - CPU 사용률
-    - 메모리 사용률
-    - 디스크 사용률
+- CPU 사용률
+- 메모리 사용률
+- 디스크 사용률
 4. 임계값 경고
 5. 로그 기록
     - `/var/log/agent-app/monitor.log` 에 저장 됨
 
 ### 스크립트 생성
+- 파일 생성
+    ```bash
+    nano /home/agent-admin/agent-app/bin/monitor.sh
+    ```
+
+- 권한 설정
+    ```bash
+    chown agent-dev:agent-core /home/agent-admin/agent-app/bin/monitor.sh
+    chmod 750 /home/agent-admin/agent-app/bin/monitor.sh
+    ```
+
+### 모니터링 수동 실행 테스트
+- 수동 실행
+    
+    `agent-admin`(일반 사용자) 실행 시 권한 에러로 방화벽 확인 불가 문제(`UFW is inactive`) 발생
+    ```bash
+    # ./monitor.sh 
+    agent-admin@abc123:~/agent-app/bin$ ./monitor.sh 
+    ERROR: You need to be root to run this script
+    ====== SYSTEM MONITOR RESULT ======
+
+    [HEALTH CHECK]
+    Checking process 'agent-app-linux-x86'... [OK] (PID: 231)
+    Checking port 15034... [OK]
+
+    [RESOURCE MONITORING]
+    CPU Usage : 5%
+    MEM Usage : 5%
+    DISK Used : 1%
+
+    [WARNING] UFW is inactive
+
+    [INFO] Log appended: /var/log/agent-app/monitor.log
+    ```
+
+- log 확인
+    ```bash
+    # ./monitor.log 
+    agent-admin@abc123:/var/log/agent-app$ cat ./monitor.log 
+
+    [2026-05-29 16:41:16] PID:231 CPU:5% MEM:5% DISK_USED:1%
+    ```
+- 위에서 발생한 문제(`UFW is inactive`)를 해결하기 위해 `/etc/sudoers` 에 `admin-agent`의 `User privilege` 추가
+    
+    
+    ```bash
+    # visudo 의존성 설치
+    apt-get install -y sudo
+
+    # visudo 실행
+    visudo
+
+    # User privilege 에 agent-admin 이 ufw status 를 확인 할 수 있도록 추가
+
+    # User privilege specification
+    root    ALL=(ALL:ALL) ALL
+    
+    agent-admin ALL=(ALL) NOPASSWD: /usr/sbin/ufw status, /usr/sbin/ufw status verbose
+    ```
+- 방화벽 활성화 완료
+    ![alt text](docs/screenshots/b1-1_agent-admin에게%20ufw%20status%20조회%20권한%20추가.png)
+
+- `monitor.sh` 실행
+    
+    `sudoers` 에서 허용한 명령으로 정확히 호출
+    및 문제 해결(방화벽 활성화) 됨
+    ```bash
+    agent-admin@abc123:~/agent-app/bin$ ./monitor.sh
+
+    ====== SYSTEM MONITOR RESULT ======
+
+    [HEALTH CHECK]
+    Checking process 'agent-app-linux-x86'... [OK] (PID: 806)
+    Checking port 15034... [OK]
+
+    [RESOURCE MONITORING]
+    CPU Usage : 3%
+    MEM Usage : 5%
+    DISK Used : 1%
+
+
+    [INFO] Log appended: /var/log/agent-app/monitor.log
+
+    ```
+- 방화벽 활성화 후 log 확인
 ```bash
-# 파일 생성
-sudo nano /home/agent-admin/agent-app/bin/monitor.sh
-
-# 권한 설정 (750 = rwxr-x---)
-sudo chown agent-dev:agent-core /home/agent-admin/agent-app/bin/monitor.sh
-sudo chmod 750 /home/agent-admin/agent-app/bin/monitor.sh
-
-# 수동 실행 테스트
-sudo -u agent-admin /home/agent-admin/agent-app/bin/monitor.sh
+agent-admin@abc123:/var/log/agent-app$ cat ./monitor.log 
+[2026-05-29 16:41:16] PID:231 CPU:5% MEM:5% DISK_USED:1%
+[2026-05-29 16:53:43] PID:231 CPU:3% MEM:5% DISK_USED:1%
+[2026-05-29 17:33:59] PID:231 CPU:6% MEM:5% DISK_USED:1%
+[2026-05-29 17:34:23] PID:806 CPU:5% MEM:4% DISK_USED:1%
+[2026-05-29 17:43:50] PID:806 CPU:3% MEM:5% DISK_USED:1%
 ```
 <br>
 <br>
@@ -680,38 +897,80 @@ sudo -u agent-admin /home/agent-admin/agent-app/bin/monitor.sh
 자동으로 모니터링 스크립트 실행
 
 ### crontab 등록
+- cron 서비스 켜져있는지 확인
+    ```bash
+    root@abc123:/# service cron status
+    * cron is not running
+    ```
+
+- cron 서비스 시작
+    ```bash
+    root@abc123:/# service cron start
+    * Starting periodic command scheduler cron                              [ OK ]
+
+    # 켜졌는지 확인
+    root@abc123:/# service cron status
+    * cron is running
+    ```
+- crontab 열기
+    ```bash
+    su - agent-admin
+    crontab -e
+    
+    # monitor.sh` 매분 실행 & 로그 저장하기
+    # >> 추가하기, > 덮어쓰기
+    * * * * * /home/agent-admin/agent-app/bin/monitor.sh >> /var/log/agent-app/monitor.cron.log 2>&1
+    ```
+
+### cron 잘 돌아가는지 확인
 ```bash
-# agent-admin의 crontab 편집
-sudo crontab -u agent-admin -e
+# 설정파일 확인
+crontab -l
 
-# 다음 라인 추가 (매분 실행):
-* * * * * /home/agent-admin/agent-app/bin/monitor.sh
+agent-admin@abc123:~$ crontab -e
+no crontab for agent-admin - using an empty one
+crontab: installing new crontab
+agent-admin@abc123:~$ crontab -l
+# Edit this file to introduce tasks to be run by cron.
+# 
+# Each task to run has to be defined through a single line
+# indicating with different fields when the task will be run
+# and what command to run for the task
+# 
+# To define the time you can provide concrete values for
+# minute (m), hour (h), day of month (dom), month (mon),
+# and day of week (dow) or use '*' in these fields (for 'any').
+# 
+# Notice that tasks will be started based on the cron's system
+# daemon's notion of time and timezones.
+# 
+# Output of the crontab jobs (including errors) is sent through
+# email to the user the crontab file belongs to (unless redirected).
+# 
+# For example, you can run a backup of all your user accounts
+# at 5 a.m every week with:
+# 0 5 * * 1 tar -zcf /var/backups/home.tgz /home/
+# 
+# For more information see the manual pages of crontab(5) and cron(8)
+# 
+# m h  dom mon dow   command
 
-# 확인
-sudo crontab -u agent-admin -l
+* * * * * /home/agent-admin/agent-app/bin/monitor.sh >> /var/log/agent-app/monitor.cron.log 2>&1
 ```
 
 ### 자동실행 확인
 ```bash
-# 1) 현재 로그 수 확인
-wc -l /var/log/agent-app/monitor.log
-
-# 2) 2분 대기
-sleep 120
-
-# 3) 로그 수 증가 확인
-wc -l /var/log/agent-app/monitor.log
-
-# 4) 최근 로그 확인
+# 최근 로그 5개 확인
 tail /var/log/agent-app/monitor.log
 ```
+매분마다 로그가 쌓임
+![alt text](docs/screenshots/b1-1_cron%20매분%20간격%20tail%20-n.png)
 <br>
 <br>
 
-## 수행 증거 (방법 2. Orbstack-Linux Machines)
+## 수행 방법 2. Orbstack-Linux Machines
 
-### orbstack 
-orbstack을 이용해 가상의 리눅스 환경을 만들어 root 권한을 이용할 수 있다.
+docker container 대신 `orbstack`을 이용해 `가상의 리눅스 환경`을 만들어 `root 권한`을 이용할 수 있다.
 
 GUI / CLI 두 방법 모두 사용 가능하다.
 
@@ -730,7 +989,7 @@ orb
 ```bash
 # orb 가상환경으로 파일 가져오기
 # orb push -m <가상환경 이름> <가져올 파일 이름>
-c08022220523@c3r3s3 Desktop % orb push -m ubu26 test.txt 
+orb push -m ubu26 test.txt 
 
 ```
 <br>
@@ -742,7 +1001,7 @@ c08022220523@c3r3s3 Desktop % orb push -m ubu26 test.txt
 ## 문제
 컨테이너 환경에서 SSH 포트 변경 후 systemd 재시작을 명령했지만, 진행되지 않음
 ```bash
-root@945e0b2ff039:/# systemctl restart ssh
+root@abc123:/# systemctl restart ssh
 
 System has not been booted with systemd as init system (PID 1). Can't operate.
 Failed to connect to system scope bus via local transport: Host is down
@@ -765,7 +1024,7 @@ Docker 컨테이너는 systemd 가 기본적으로 실행되지 않기 때문이
 - SSH 데몬 재실행
     ```bash
     # service ssh restart
-    root@945e0b2ff039:/# service ssh restart
+    root@abc123:/# service ssh restart
     
     * Restarting OpenBSD Secure Shell server sshd
     ```
@@ -783,13 +1042,13 @@ Docker 컨테이너는 systemd 가 기본적으로 실행되지 않기 때문이
 - 변경 완료 (port 가 22 -> 20022 로 변경 됨)
     ```bash
     # 방법1. netstat -nlp | grep sshd
-    root@945e0b2ff039:/# netstat -nlp | grep sshd
+    root@abc123:/# netstat -nlp | grep sshd
 
     tcp        0      0 0.0.0.0:20022           0.0.0.0:*               LISTEN      30/sshd: /usr/sbin/ 
     tcp6       0      0 :::20022                :::*                    LISTEN      30/sshd: /usr/sbin/
 
     # 방법2. netstat -tulnp | grep 20022
-    root@945e0b2ff039:/# netstat -tulnp | grep 20022
+    root@abc123:/# netstat -tulnp | grep 20022
 
     tcp        0      0 0.0.0.0:20022           0.0.0.0:*               LISTEN      30/sshd: /usr/sbin/ 
     tcp6       0      0 :::20022                :::*                    LISTEN      30/sshd: /usr/sbin/ 
