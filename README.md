@@ -15,7 +15,7 @@
 <br>
 <br>
 
-## 수행 증거 (방법1. docker container 이용)
+## 수행 방법1. docker container 이용
 ### 공통 - Docker / Container 준비
 Codyssey 실습환경은 프로그램 설치가 제한되어 있어서, 제공된 `OrbStack` 을 통해 `Docker` 를 사용한다.
 - docker version 확인
@@ -910,9 +910,7 @@ tcp   LISTEN 0      1            0.0.0.0:15034      0.0.0.0:*    users:(("agent-
     ![alt text](docs/screenshots/b1-1_agent-admin에게%20ufw%20status%20조회%20권한%20추가.png)
 
 ### `monitor.sh` 실행
-    
-    `sudoers` 에서 허용한 명령으로 정확히 호출
-    및 문제 해결(방화벽 활성화) 됨
+- `sudoers` 에서 허용한 명령으로 정확히 호출 및 문제 해결(방화벽 활성화) 됨
     ```bash
     agent-admin@abc123:~/agent-app/bin$ ./monitor.sh
 
@@ -931,20 +929,21 @@ tcp   LISTEN 0      1            0.0.0.0:15034      0.0.0.0:*    users:(("agent-
     [INFO] Log appended: /var/log/agent-app/monitor.log
 
     ```
+
 - 방화벽 활성화 후 log 확인
-```bash
-agent-admin@abc123:/var/log/agent-app$ cat ./monitor.log 
-[2026-05-29 16:41:16] PID:231 CPU:5% MEM:5% DISK_USED:1%
-[2026-05-29 16:53:43] PID:231 CPU:3% MEM:5% DISK_USED:1%
-[2026-05-29 17:33:59] PID:231 CPU:6% MEM:5% DISK_USED:1%
-[2026-05-29 17:34:23] PID:806 CPU:5% MEM:4% DISK_USED:1%
-[2026-05-29 17:43:50] PID:806 CPU:3% MEM:5% DISK_USED:1%
-```
+    ```bash
+    agent-admin@abc123:/var/log/agent-app$ cat ./monitor.log 
+    [2026-05-29 16:41:16] PID:231 CPU:5% MEM:5% DISK_USED:1%
+    [2026-05-29 16:53:43] PID:231 CPU:3% MEM:5% DISK_USED:1%
+    [2026-05-29 17:33:59] PID:231 CPU:6% MEM:5% DISK_USED:1%
+    [2026-05-29 17:34:23] PID:806 CPU:5% MEM:4% DISK_USED:1%
+    [2026-05-29 17:43:50] PID:806 CPU:3% MEM:5% DISK_USED:1%
+    ```
 <br>
 <br>
 
-# 6. 자동 실행 설정 (30분)
-자동으로 모니터링 스크립트 실행
+# 6. 자동 실행 설정
+매분마다 자동으로 모니터링 스크립트 실행
 
 ### crontab 등록
 - cron 서비스 켜져있는지 확인
@@ -969,10 +968,11 @@ agent-admin@abc123:/var/log/agent-app$ cat ./monitor.log
     
     # monitor.sh` 매분 실행 & 로그 저장하기
     # >> 추가하기, > 덮어쓰기
+    
     * * * * * /home/agent-admin/agent-app/bin/monitor.sh >> /var/log/agent-app/monitor.cron.log 2>&1
     ```
 
-### cron 잘 돌아가는지 확인
+### cron 잘 설정되었는지 확인
 ```bash
 # 설정파일 확인
 crontab -l
@@ -1008,17 +1008,18 @@ agent-admin@abc123:~$ crontab -l
 * * * * * /home/agent-admin/agent-app/bin/monitor.sh >> /var/log/agent-app/monitor.cron.log 2>&1
 ```
 
-### 자동실행 확인
+### 자동 실행 확인
+의도대로 매분마다 로그가 쌓임
+
 ```bash
 # 최근 로그 5개 확인
 tail /var/log/agent-app/monitor.log
 ```
-매분마다 로그가 쌓임
 ![alt text](docs/screenshots/b1-1_cron%20매분%20간격%20tail%20-n.png)
 <br>
 <br>
 
-## 수행 방법 2. Orbstack-Linux Machines
+## 참고) 수행 방법 2. Orbstack-Linux Machines
 
 docker container 대신 `orbstack`을 이용해 `가상의 리눅스 환경`을 만들어 `root 권한`을 이용할 수 있다.
 
