@@ -17,8 +17,7 @@
 
 ## 수행 증거 (방법1. docker container 이용)
 ### 공통 - Docker / Container 준비
-Codyssey 실습환경은 프로그램 설치가 제한되어 있어서,
-제공된 OrbStack 을 통해 Docker 를 사용한다.
+Codyssey 실습환경은 프로그램 설치가 제한되어 있어서, 제공된 `OrbStack` 을 통해 `Docker` 를 사용한다.
 - docker version 확인
     ```bash
     # docker --version
@@ -29,7 +28,7 @@ Codyssey 실습환경은 프로그램 설치가 제한되어 있어서,
 
 - 컨테이너 생성 (linux-ubuntu)
 
-    컨테이너를 띄울 때 네트워크/iptabls 를 만질 수 있는 커널 capability 를 열어준다.
+    컨테이너를 띄울 때 `네트워크/iptabls` 를 만질 수 있는 커널 `capability` 를 열어준다.
 
     ```bash
     # docker run
@@ -38,28 +37,54 @@ Codyssey 실습환경은 프로그램 설치가 제한되어 있어서,
     - 기본 도커 컨테이너는 NET_ADMIN 같은 네트워크 관리 capability 가 막혀 있어서 `iptables-restore` 가 Permission denied 가 난다.
     - `--cap-add=NET_ADMIN` 을 주면 해당 컨테이너에 "네트워크 관리" 권한이 붙고, 그안에서 iptables/ufw 명령이 통과 할 수 있게 된다.
 
-- apt 패키지 의존성 관리
+- 패키지 설치 - `apt`
     
-    컨테이너 내부 진입 후 실행 (프롬프트가 '#' 으로 표시되면 진입된 것 임) 
-    ```bash
-    root@abc123:/# apt update
-    # apt update : 인터넷 저장소에서 설치 가능한 패키지 목록을 받아오기
-  
-    root@abc123:/# apt upgrade -y
-    # 설치된 패키지들을 최신 버전으로 업그레이드 하기 (-y : 업그레이드 후 Yes/No 를 묻는데, 자동으로 Yes 라고 답하는 옵션)
+    `apt` 는 인터랙티브 사용을 기준으로 설계돼서, 일반 `사용자들이 터미널에서` 쓰기 좋다.
 
+    cf. 컨테이너 내부 진입 후 실행 (프롬프트가 `#` 으로 표시되면 진입된 것 이다.) 
+    
+    ```bash
+    # 설치 가능한 패키지 목록 받아오기
+    apt update
   
-    root@abc123:/# apt install -y nano openssh-server ufw cron acl
-    # 4개의 패키지를 설치하고 자동으로 Yes 라고 답하기 (nano : 텍스트 에디터, openssh-server : ssh 서버, ufw : 방화벽, cron : 스케쥴 실행 도구, acl : Access Control List, 파일이나 디렉토리에 대한 접근권한 관리 시스템)
+    # 최신 버전으로 업그레이드 하기 (-y : 업그레이드 중 Yes/No 질문에 자동으로 Yes라고 답하는 옵션)
+    apt upgrade -y
+
+    # 4개의 패키지를 설치하고 자동으로 Yes 라고 답하기
+    # nano : 텍스트 에디터
+    # openssh-server : ssh 서버
+    # ufw : 방화벽
+    # cron : 스케쥴 실행 도구
+    apt install -y nano openssh-server ufw cron
     ```
+    
+- 패키지 설치 - `apt-get`
+
+    `apt-get` 은 출력이 심플해서, `스크립트/자동화`에서 파싱하기 좋고, 오래전부터 쓰여왔기 때문에 호환성과 안정성이 높다.
+    
+    ```bash
+    # 업그레이드
+    apt-get update
+
+    # 패키지 설치
+    # iproute2 : IP 주소, 라우팅, 네트워크 인터페이스 등을 관리하는 네트워크 유틸리티 모음
+    # net-tools : ifconfig, netstat 같은 구버전 네트워크 도구 모음
+    # acl : 파일/디렉토리 접근권한을 세밀하게 제어하기 위한 Access Control List 도구
+    # sudo : 일반 사용자가 제한된 범위에서 root 권한 명령을 실행할 수 있게 해주는 권한 상승 도구
+    apt-get install -y iproute2 net-tools acl sudo
+  
+    ```
+
 - 컨테이너 나가기 (혹은 Ctrl + D) 
     ```bash
     root@abc123:/# exit
     ```
+
 - 컨테이너 실행만 하기 (백그라운드)
     ```bash
     docker start mission-b1-1
     ```
+
 - 컨테이너에 접속해서 작업하기
     ```bash
     docker exec -it mission-b1-1 /bin/bash
@@ -67,77 +92,67 @@ Codyssey 실습환경은 프로그램 설치가 제한되어 있어서,
 <br>
 <br>
 
-# 1. 기본 보안 설정 (SSH Port 변경 & Root Login 차단)
+# 1. 기본 보안 설정
 ## 1-1. SSH Port 변경 (22 -> 20022)
-SSH Port 는 `sshd_config` 파일에서 설정할 수 있다.
+### 포트를 왜 바꿔야 하나요?
+기본 포트(22)는 봇 스캐닝, 무차별 대입 공격이 제일 많이 들어오기때문에, 포트를 바꾸는 것 만으로도 노이즈 트래픽을 크게 줄일 수 있다.
 
-### ssh 관련 설정파일
-`sshd_config` : 서버 데몬 설정 (외부 서버 -> 내 서버 SSH 접속 시)
-- `sshd` 는 리눅스에서 항상 실행되고 있는 백그라운드 프로그램이다.
+### 어디서 바꾸나요?
+SSH Port 는 `sshd_config` 에서 수정할 수 있고, 
 
+그 외 서버 데몬도 설정도 (외부 서버 -> 내 서버 SSH 접속 시) 할 수 있다.
 
-(cf. `ssh_config` : 클라이언트 설정 (내 서버 -> 외부 서버 접속 시))
-<br>
-<br>
-
-### `sshd_config` 주요 내용
 - `Port`: SSH가 사용할 포트 번호 (기본값 22) -> `20022 로 변경`
 - `PermitRootLogin`: root 계정의 원격 로그인 허용 여부 -> `no 로 차단`
 - `PasswordAuthentication`: 비밀번호 인증 허용 여부
 - `PubkeyAuthentication`: 공개키 인증 허용 여부
 - `Protocol`: SSH 프로토콜 버전 선택 (보안상 2 권장)
 - `ListenAddress`: SSH 서버가 특정 IP 주소로만 접속 받도록 설정
+
+(cf. `ssh_config` : 클라이언트 설정 (내 서버 -> 외부 서버 접속 시))
 <br>
 <br>
 
-### 1. 설정파일에서 Port 변경
-이미 컨테이너의 **root 권한**을 가지고 있기 때문에 **sudo** 명령어 없이 바로 편집할 수 있다.
-```bash
-nano /etc/ssh/sshd_config
-```
-- 포트 변경 전 (22)
 
-    Port 22 를 주석 해제 하고, Port 20022 로 변경한다.
+
+### 1. Port 변경
+이미 컨테이너의 `root 권한`을 가지고 있기 때문에 `sudo` 명령어 없이 바로 편집할 수 있다.
+- `sshd_config` 파일 열기
+    ```bash
+    nano /etc/ssh/sshd_config
+    ```
+- 포트 변경
+
+    Port `22` 를 주석 해제 하고, Port `20022` 로 변경한다.
     ![alt text](docs/screenshots/b1-1_포트%20변경%20전.png)
 
-```bash
-cat /etc/ssh/sshd_config
-```
-- 포트 변경 후 (20022)
 
-    포트 변경 후 SSH 데몬이 20022 포트로 리스닝하도록 설정되었다. 
+- 포트 변경 확인
+    ```bash
+    cat /etc/ssh/sshd_config
+    ```
+    
+    포트 변경 후 SSH 데몬이 `20022` 포트로 리스닝하도록 설정되었다. 
 
     ![alt text](docs/screenshots/b1-1_포트%20변경%20후.png)
 <br>
 <br>
 
 ### 2. SSH 재시작
-- SSH 데몬 재실행
-    ```bash
-    # service ssh restart
-    root@abc123:/# service ssh restart
+변경사항 적용을 위해 데몬을 재시작 한다.
+```bash
+# service ssh restart
+root@abc123:/# service ssh restart
     
-    * Restarting OpenBSD Secure Shell server sshd  
-    ```
+* Restarting OpenBSD Secure Shell server sshd  
+```
 <br>
 
 ### 3. Port 변경 확인
-- 의존성 설치 - apt upgrade
-    ```bash
-    # netstat 사용을 위한 apt 업그레이드
-    apt-get update
-
-    # netstat 사용을 위한 net-tools 설치
-    apt-get install net-tools
-
-    # ss가 포함된 iproute2 설치
-    apt-get install -y iproute2
-    ```
-
 - 확인 방법1. `netstat` (Network Statistics)
+    
+    현재 LISTEN 중인 TCP/UDP 포트 목록 + 그 포트를 잡고 있는 프로세스(PID/이름)를 보여준다.
     ```bash
-    # 
-    # 현재 LISTEN 중인 TCP/UDP 포트 목록 + 그 포트를 잡고 있는 프로세스(PID/이름)를 보여준다.
     netstat -tulnp | grep 20022
 
     tcp        0      0 0.0.0.0:20022           0.0.0.0:*               LISTEN      4552/sshd: /usr/sbi 
@@ -145,8 +160,9 @@ cat /etc/ssh/sshd_config
     ```
 
 - 확인 방법2. `ss` (Socket Statistics)
+
+    netstat의 최신 버전같은 도구, LISTEN 포트와 프로세스 정보를 더 빠르게 보여준다.
     ```bash
-    # netstat의 최신 버전같은 도구, LISTEN 포트와 프로세스 정보를 더 빠르게 보여준다.
     ss -tulnp | grep 20022
 
     Netid   State    Recv-Q   Send-Q     Local Address:Port      Peer Address:Port  Process                                                                         
@@ -155,8 +171,9 @@ cat /etc/ssh/sshd_config
     ```
 
 - 확인 방법3. `ps aux | grep` 프로세스
+    
+    시스템의 모든 실행중인 프로세스 + 동작 모드 상세 표시 명령어
     ```bash
-    # 시스템의 모든 실행중인 프로세스 + 동작 모드 상세 표시 명령어
     ps aux | grep sshd
 
     root        4552  0.0  0.0  10736  2400 ?        Ss   18:42   0:00 sshd: /usr/sbin/sshd [listener] 0 of 10-100 startups
@@ -169,10 +186,12 @@ cat /etc/ssh/sshd_config
 
 
 ## 1-2. ROOT 로그인 차단 (prohibit-password -> no)
+`root` 는 시스템 전체 권한이라 한번 탈취되면 방어수단이 거의 없어서, 일반 계정(`agent-admin`)으로 접속하고 `필요한 경우에만 sudo` 로 실행한다.
+
 Root 로그인도 `sshd_config` 파일에서 수정할 수 있다.
-- 권한 변경 (전)
+### 1. 권한 변경 (전)
     
-    PermitRootLogin 의 주석을 해제하고, `prohibit-password` 를 `no` 로 변경한다.
+    `PermitRootLogin` 의 주석을 해제하고, `prohibit-password` 를 `no` 로 변경한다.
     ```bash
     nano /etc/ssh/sshd_config
     ```
@@ -180,7 +199,7 @@ Root 로그인도 `sshd_config` 파일에서 수정할 수 있다.
     ![alt text](docs/screenshots/b1-1_PermitRootLogin%20변경%20전.png)
 
 
-- 권한 변경 (후)
+### 2. 권한 변경 (후)
     ```bash
     root@abc123:/# cat /etc/ssh/sshd_config | grep PermitRootLogin
     
@@ -190,12 +209,13 @@ Root 로그인도 `sshd_config` 파일에서 수정할 수 있다.
     ```
 
     ![alt text](docs/screenshots/b1-1_PermitRootLogin%20변경%20후.png)
-    - PermitRootLogin 의 옵션
+
+### cf. PermitRootLogin 의 옵션
     - yes : Root 로그인 허용 (비밀번호 가능)  
     - no : Root 로그인 차단 (완전히 차단)
     - prohibit-password : Root 로그인은 허용하되, 비밀번호 인증은 금지한다. (공개키 인증으로만 접속가능)
 
-- 서비스 재시작
+### 3. 서비스 재시작
     ```bash
     root@abc123:/# service ssh restart
     
@@ -208,8 +228,6 @@ Root 로그인도 `sshd_config` 파일에서 수정할 수 있다.
 
 # 2. 방화벽 설정
 ### 방화벽 종류
-두 가지 방화벽으로 미션을 수행할 수 있는데, 나는 초보자에게 친화적인 UFW 로 골랐다.
-
 1. `UFW` (Uncomplicated Firewall) -> 이걸로 진행
 - iptables 래퍼
 - Ubuntu, Debian
@@ -221,7 +239,9 @@ Root 로그인도 `sshd_config` 파일에서 수정할 수 있다.
 - 고급 기능 많음
 
 
-### 방화벽 설정
+## 방화벽 설정
+`최소 권한 원칙`에 따라 미션에서 요구하는 서비스 2개 (SSH 20022/tcp, 앱 15034/tcp) 만 인바운드 허용하고, 나머지는 기본정책으로 불필요한 포트 노출을 차단한다.
+
 - UFW 활성화
     ```bash
     # ufw enable
@@ -255,8 +275,13 @@ Root 로그인도 `sshd_config` 파일에서 수정할 수 있다.
 
 # 3. 계정/그룹/권한 설정
 
-### 그룹 생성 - `groupadd <그룹 명>`
-2개의 그룹을 생성한다. (agent-common, agent-core)
+### 그룹 생성
+그룹을 `common`, `core` 로 나누어 생성하여, 테스트 계정은 앱 로그나 키 파일에는 접근하지 못하고, 업로드용 경로만 사용할 수 있도록 제한한다.
+- `agent-common` 그룹: `admin`/`dev`/`test` 모두 포함 
+    → `upload_files` 같이 같이 쓰는 경로에 `R`/`W` 권한 부여
+
+- `agent-core` 그룹: `admin`/`dev`만 포함 
+    → `api_keys`, `/var/log/agent-app` 같이 민감한 정보/운영 로그에는 이 그룹 사용자만 접근 가능하게 설정
 
 ```bash
 # 그룹 생성
@@ -270,7 +295,7 @@ agent-common:x:1001:
 agent-core:x:1002:
 ```
 
-### 계정 생성 - `useradd -m -s <사용 할 shell> <계정 명>`
+### 계정 생성
 - agent-admin : 관리자
 - agent-dev : 스크립트 작성, 실행
 - agent-test : 테스트 수행
@@ -282,8 +307,7 @@ agent-core:x:1002:
     ```
 
 
-
-### 그룹 소속 시키기 - `usermod -aG <그룹 명> <계정 명>`
+### 그룹 소속 시키기
 - `-aG` : 기존 그룹을 유지하면서 보조그룹(G)에 추가(a)
 - `-G` : 기존 그룹을 현재 그룹으로 완전히 교체
 
@@ -314,7 +338,8 @@ uid=1003(agent-test) gid=1005(agent-test) groups=1005(agent-test),1001(agent-com
 
 ---
 
-### 미션 외 ) 계정 수정
+## 미션 외
+### 계정 수정
 - 계정 이름 + 홈 디렉토리 같이 변경
 - `-l` : 로그인 이름 변경 (old -> new)
 - `-d <경로>` : 홈 디렉토리도 새 계정 명으로 변경
@@ -324,7 +349,7 @@ uid=1003(agent-test) gid=1005(agent-test) groups=1005(agent-test),1001(agent-com
     usermod -l agent-new -d /home/agent-new -m agent-old
     ```
 
-### 미션 외 ) 계정 삭제
+### 계정 삭제
 - `-r` : 설정했던 하위 옵션까지 삭제해라
 
     ```bash
@@ -336,7 +361,7 @@ uid=1003(agent-test) gid=1005(agent-test) groups=1005(agent-test),1001(agent-com
     ```
 
 
-### 미션 외 ) 그룹 수정
+### 그룹 수정
 - 현재 그룹 확인
     ```bash
     # getent group <기존 계정 명>
@@ -348,7 +373,7 @@ uid=1003(agent-test) gid=1005(agent-test) groups=1005(agent-test),1001(agent-com
     ```
 
 
-### 미션 외 ) 그룹 삭제 
+### 그룹 삭제 
 - 그룹이 실제로 존재하는지 확인
     ```bash
     # getent group <그룹 명>
@@ -374,6 +399,7 @@ uid=1003(agent-test) gid=1005(agent-test) groups=1005(agent-test),1001(agent-com
 
 ---
 
+## 디렉토리
 ### 디렉토리 생성 및 확인
 
 ```bash
@@ -413,6 +439,7 @@ api_keys  bin  upload_files
 
 
 ### 디렉토리 권한 변경 - `upload_files` (agent-common 모두 접근 가능)
+소유/그룹을 `agent-admin:agent-common`으로 두고, 그룹에 쓰기 권한을 줘서 모든 역할이 업로드 가능하게 한다.
 - 변경 전 : 디렉토리 권한 `755(drwxr-xr-x)`, 디렉토리 그룹 `agent-core`
 
     ```bash
@@ -436,6 +463,7 @@ api_keys  bin  upload_files
     ```
 
 ### 디렉토리 권한 변경 - api_keys (agent-core만 접근)
+`agent-admin:agent-core`와 그룹 쓰기로 묶어서, admin/dev만 내용을 보고 쓸 수 있게 한다.
 - 변경 전 : 디렉토리 권한 `755(drwxr-xr-x)`, 디렉토리 그룹 agent-core
     ```bash
     # 디렉토리의 권한 변경
@@ -458,12 +486,11 @@ api_keys  bin  upload_files
 
 ---
 
-### 로그 디렉토리
+## 로그 디렉토리
 - 로그 디렉토리 생성
     ```bash
     mkdir -p /var/log/agent-app
     ```
-
 
 - 로그 디렉토리 소유자 및 권한 변경
     ```bash
@@ -497,10 +524,6 @@ api_keys  bin  upload_files
     - `setfacl` : 파일이나 디렉토리의 ACL 설정
     - `getfacl` : 파일이나 디렉토리의 ACL 설정 확인
 
-- ACL 의존성 설치
-    ```bash
-    apt-get install acl
-    ```
 
 - `agent-app` 디렉토리 권한 확인
     ```bash
@@ -538,6 +561,9 @@ api_keys  bin  upload_files
 <br>
 
 # 4. 환경변수
+앱이 부팅할 때 아래 환경변수 값을 기준으로 경로와 포트를 검증한다.
+환경변수로 경로를 고정해두면, 디렉토리 구조가 바뀌어도 스크립트만 수정하면 전체동작을 일관되게 유지할 수 있기 때문에 사용성 면에서 편리하다.
+
 ### 환경변수 설정
 `agent-admin`의 bash 프로필에 환경 변수 추가
 ```bash
@@ -568,7 +594,7 @@ nano /home/agent-admin/.bashrc
     ```
 
 
-### API 키 생성
+## API 키 생성
 
 - 사용자 전환 (root -> agent-admin)
     ```bash
@@ -582,11 +608,13 @@ nano /home/agent-admin/.bashrc
     - `exit` : exit 명령으로 logout 후 원래 계정으로 돌아온다.
 
 - 키 파일 생성
+    
     ```bash
     echo "agent_api_key_test" > /home/agent-admin/agent-app/api_keys/t_secret.key
     ```
 
 - 컨테이너로 나가서 권한 설정
+    소유자(`agent-admin`)만 `읽기/쓰기` 가 가능하게 하고, `그룹`은 내용 `확인`, `기타` 사용자는 `접근 불가`로 한다.
     ```bash
     exit
     chmod 640 /home/agent-admin/agent-app/api_keys/t_secret.key
@@ -598,8 +626,9 @@ nano /home/agent-admin/.bashrc
     ```
 ![alt text](docs/screenshots/b1-1_사용자%20전환(root%20->%20agent-admin).png)
 
-### 앱 실행
-- 호스트 터미널에서 agent-app.zip 다운로드 후 컨테이너의 $AGENT_HOME에 복사
+## 앱 실행 (./agent-app-linux-x86)
+### 앱 실행 준비
+- 호스트 터미널에서 `agent-app.zip` 다운로드 후 컨테이너의 `$AGENT_HOME`에 복사
     ```bash
     cd Downloads
     docker cp agent-app mission-b1-1:/home/agent-admin
@@ -616,8 +645,10 @@ nano /home/agent-admin/.bashrc
     cd $AGENT_HOME
     ./agent-app-linux-x86
     ```
-- Error - `AGENT_KEY_PATH` 변경   
-    최초 요구사항인 `t_secret.key` 로 앱실행 시 아래와 같은 에러 발생하여 이에 맞게 `secret.key` 로 이름을 바꿔준다.
+### Error - `AGENT_KEY_PATH` 변경   
+최초 요구사항인 `t_secret.key` 로 앱실행 시 아래와 같은 에러 발생하여 이에 맞게 `secret.key` 로 이름을 바꿔준다.
+- 변경 전 : $AGENT_HOME/api_keys/`t_secret.key`
+- 변경 후 : $AGENT_HOME/api_keys/`secret.key`
 
     ```bash
     agent-admin@abc123:~/agent-app$ ./agent-app-linux-x86 
@@ -638,54 +669,63 @@ nano /home/agent-admin/.bashrc
     System Boot Failed. Process Terminated.
     
     ```
+- `agent-admin`의 `~/.bashrc`에서 `AGENT_KEY_PATH` 변경
+    ```bash
+    mv /home/agent-admin/agent-app/api_keys/t_secret.key \
+   /home/agent-admin/agent-app/api_keys/secret.key
+    ```
+- 변경 후 정상 호출
     ```bash
     agent-admin@abc123:~/agent-app$ echo agent_api_key_test
     
     agent_api_key_test
     ```
-    - 변경 전 : $AGENT_HOME/api_keys/t_secret.key
-    - 변경 후 : $AGENT_HOME/api_keys/secret.key
+
 
 
 ### 앱실행 & 정상 출력 확인
-```bash
-# agent-admin 으로 실행할 때
-agent-admin@abc123:~/agent-app$ ./agent-app-linux-x86
->>> Starting Agent Boot Sequence...
-[1/5] Checking User Account               [OK]
-   ... Running as service user 'agent-admin' (uid=1001)
-[2/5] Verifying Environment Variables     [OK]
-   ... All required Envs correct
-[3/5] Checking Required Files             [OK]
-   ... Verified 'secret.key' with correct key string.
-[4/5] Checking Port Availability          [OK]
-   ... Port 15034 is available.
-[5/5] Verifying Log Permission            [OK]
-   ... Log directory is writable: /var/log/agent-app
-------------------------------------------------------------
-All Boot Checks Passed!
-Agent READY
 
-# root 로 실행할 때 (실패)
-root@abc123:/home/agent-admin/agent-app# ./agent-app-linux-x86 
->>> Starting Agent Boot Sequence...
-[1/5] Checking User Account               [FAIL]
-   >>> Error: Running as 'root' is forbidden.
-[2/5] Verifying Environment Variables     [FAIL]
-   >>> Skipped due to previous critical failure.
-[3/5] Checking Required Files             [FAIL]
-   >>> Skipped due to previous critical failure.
-[4/5] Checking Port Availability          [FAIL]
-   >>> Skipped due to previous critical failure.
-[5/5] Verifying Log Permission            [FAIL]
-   >>> Skipped due to previous critical failure.
---------------------------------------------------
-System Boot Failed. Process Terminated.
-```
-![alt text](docs/screenshots/b1-1_secret.key%20이름변경%20후%20앱%20정상%20실행.png)
+- agent-admin 으로 실행할 때 (정상 출력)
+    ```bash
+    agent-admin@abc123:~/agent-app$ ./agent-app-linux-x86
+    >>> Starting Agent Boot Sequence...
+    [1/5] Checking User Account               [OK]
+    ... Running as service user 'agent-admin' (uid=1001)
+    [2/5] Verifying Environment Variables     [OK]
+    ... All required Envs correct
+    [3/5] Checking Required Files             [OK]
+    ... Verified 'secret.key' with correct key string.
+    [4/5] Checking Port Availability          [OK]
+    ... Port 15034 is available. # 포트 리슨
+    [5/5] Verifying Log Permission            [OK]
+    ... Log directory is writable: /var/log/agent-app
+    ------------------------------------------------------------
+    All Boot Checks Passed!
+    Agent READY
+    ```
+    ![alt text](docs/screenshots/b1-1_secret.key%20이름변경%20후%20앱%20정상%20실행.png)
+
+- root 로 실행할 때 (권한을 agent-admin 만 줬기 때문에 차단됨)
+    ```bash
+    root@abc123:/home/agent-admin/agent-app# ./agent-app-linux-x86 
+    >>> Starting Agent Boot Sequence...
+    [1/5] Checking User Account               [FAIL]
+    >>> Error: Running as 'root' is forbidden.
+    [2/5] Verifying Environment Variables     [FAIL]
+    >>> Skipped due to previous critical failure.
+    [3/5] Checking Required Files             [FAIL]
+    >>> Skipped due to previous critical failure.
+    [4/5] Checking Port Availability          [FAIL]
+    >>> Skipped due to previous critical failure.
+    [5/5] Verifying Log Permission            [FAIL]
+    >>> Skipped due to previous critical failure.
+    --------------------------------------------------
+    System Boot Failed. Process Terminated.
+    ```
+
 
 ### 앱 : 부하시뮬레이션
-앱이 자동으로 CPU 레벨과 메모리 사용량을 25MB 씩 주기적으로 올렸다가(UP), 최대치에서 다시 내려오는(DOWN) 부하 시뮬레이션 진행
+앱이 실행되고, `Agent READY` 상태가 되면 자동으로 `CPU 레벨`과 `메모리 사용량`을 25MB 씩 주기적으로 올렸다가(`UP`), 최대치에서 다시 내려오는(`DOWN`) 부하 시뮬레이션 진행
 
 ```bash
 # UP
@@ -767,9 +807,10 @@ System Boot Failed. Process Terminated.
 
 ```
 
-### 다른 터미널에서 포트 확인 ㅇㄹㅇㄹㄹㅇㄹㅇㄹㅇㄹㅇㄹㅇ
+### 다른 터미널에서 포트 확인
 ```bash
-ss -tulnp | grep 15034
+agent-admin@abc123:/var/log/agent-app$ ss -tulnp | grep 15034
+tcp   LISTEN 0      1            0.0.0.0:15034      0.0.0.0:*    users:(("agent-app-linux",pid=1097,fd=4))
 
 # 결과: 0.0.0.0:15034 LISTEN
 ```
@@ -779,22 +820,32 @@ ss -tulnp | grep 15034
 # 5. 모니터링 스크립트
 자동으로 시스템의 상태를 체크하고 기록한다.
 
-수동 모니터링 시 매 분 체크가 불가능하며, 실수하기 쉽고 기록이 없는 반면, 자동 모니터링 시 24/7 감시 가능하며, 휴먼에러가 없고 기록이 남아 데이터 기반 분석이 가능하다.
+`수동 모니터링` 시 매 분 체크가 불가능하며, 실수하기 쉽고 기록이 없는 반면,
+`자동 모니터링` 시 24/7 감시 가능하며, 휴먼에러가 없고 기록이 남아 데이터 기반 분석이 가능하다.
 
 
 ### monitor.sh 의 5가지 기능
 1. 헬스 체크 (실패 시 종료)
-- 프로세스 : `agent_app.py` 가 실행중 인지 확인
-- 포트 : 15034 수신중 인지 확인
+    - 프로세스 : `agent-app-linux-x86` 이 실행중 인지 확인
+    - 포트 : 15034 수신중 인지 확인
+    
+    비정상 상태에서 리포트를 만들어 내는 것보다는 바로 종료하고, 실패 로그만 남기는 쪽이 문제를 추적하기 좋다고 판단해서 `exit 1`로 끝내도록 한다.
+
 2. 경고 체크 (경고만 출력)
-- 방화벽 활성화
+    - 방화벽 활성화 상태 확인
+    - 비활성 상태이거나 도구가 없으면 [WARNING] 만 남기고 스크립트는 계속 진행
+
 3. 자원 수집
-- CPU 사용률
-- 메모리 사용률
-- 디스크 사용률
+    - CPU 사용률(%) : top -bn1의 Cpu(s) 라인에서 idle 퍼센트를 뽑고, 100 - idle로 사용률을 계산
+    - 메모리 사용률(%) : free 명령의 Mem: 라인에서 used/total * 100으로 계산
+    - 디스크 사용률(%) ; df -P /로 루트 파티션을 기준으로 사용률(%)을 가져옴
 4. 임계값 경고
+    - CPU > 20%: [WARNING] CPU threshold exceeded
+    - MEM > 10%: [WARNING] MEM threshold exceeded
+    - DISK_USED > 80%: [WARNING] DISK threshold exceeded
 5. 로그 기록
-    - `/var/log/agent-app/monitor.log` 에 저장 됨
+    - `/var/log/agent-app/monitor.log` 에 한줄씩 누적 기록 됨
+    - 포맷 : `[YYYY-MM-DD HH:MM:SS] PID:.. CPU:..% MEM:..% DISK_USED:..%`
 
 ### 스크립트 생성
 - 파일 생성
@@ -839,13 +890,11 @@ ss -tulnp | grep 15034
 
     [2026-05-29 16:41:16] PID:231 CPU:5% MEM:5% DISK_USED:1%
     ```
+
 - 위에서 발생한 문제(`UFW is inactive`)를 해결하기 위해 `/etc/sudoers` 에 `admin-agent`의 `User privilege` 추가
     
     
     ```bash
-    # visudo 의존성 설치
-    apt-get install -y sudo
-
     # visudo 실행
     visudo
 
@@ -856,10 +905,11 @@ ss -tulnp | grep 15034
     
     agent-admin ALL=(ALL) NOPASSWD: /usr/sbin/ufw status, /usr/sbin/ufw status verbose
     ```
+
 - 방화벽 활성화 완료
     ![alt text](docs/screenshots/b1-1_agent-admin에게%20ufw%20status%20조회%20권한%20추가.png)
 
-- `monitor.sh` 실행
+### `monitor.sh` 실행
     
     `sudoers` 에서 허용한 명령으로 정확히 호출
     및 문제 해결(방화벽 활성화) 됨
