@@ -193,6 +193,11 @@ root@ubuntu:~# service ssh restart
 - 확인 방법1. `netstat` (Network Statistics)
     
     현재 LISTEN 중인 TCP/UDP 포트 목록 + 그 포트를 잡고 있는 프로세스(PID/이름)를 보여준다.
+    - `t` : TCP 연결만 표시
+    - `u` : UDP 연결만 표시
+    - `l` : LISTEN 중인 소켓만 표시 (즉, “연결 대기 중인 포트”만)
+    - `n` : 도메인/서비스 이름 대신 숫자(IP, 포트 번호) 그대로 표시 예: :ssh 대신 :22
+    - `p` : 그 포트를 사용 중인 프로세스의 PID와 프로그램 이름을 같이 표시
     ```bash
     netstat -tulnp | grep 20022
 
@@ -349,6 +354,9 @@ agent-core:x:1001:
 - agent-admin : 관리자
 - agent-dev : 스크립트 작성, 실행
 - agent-test : 테스트 수행
+
+- `m` : 홈 디렉터리 생성
+- `s` : 기본 로그인 쉘 지정
 
     ```bash
     root@ubuntu:~# useradd -m -s /bin/bash agent-admin
@@ -565,7 +573,7 @@ api_keys  bin  upload_files
     drwxrwxr-x 1 root        syslog     322 Jun  4 19:38 ..
     ```
 
-## 3-7. ACL 의존성 설치 및 설정 확인
+## 3-7. ACL 설정 확인
 - `ACL` 이란?
 
      : Access Control List, **기본권한(rwx)보다 상세한 권한 설정을 가능**하게하는 시스템

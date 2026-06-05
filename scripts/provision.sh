@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
+# 중간에 실패하거나 정의되지 않은 변수를 사용하면 스크립트 종료
 set -euo pipefail
 
+# apt 비대화모드 + 기본  패키지 설치
 export DEBIAN_FRONTEND=noninteractive
 
 echo "[INFO] apt update / upgrade"
@@ -65,17 +67,17 @@ setfacl -m g:agent-common:rwx "${UPLOAD_DIR}"
 setfacl -m g:agent-core:rwx   "${KEY_DIR}"
 setfacl -m g:agent-core:rwx   "${LOG_DIR}"
 
-echo "[INFO] create key file (t_secret.key → README에서 secret.key로 변경 예정)"
-echo "agent_api_key_test" > "${KEY_DIR}/t_secret.key"
-chown agent-admin:agent-core "${KEY_DIR}/t_secret.key"
-chmod 640 "${KEY_DIR}/t_secret.key"
+echo "[INFO] create key file (secret.key)"
+echo "agent_api_key_test" > "${KEY_DIR}/secret.key"
+chown agent-admin:agent-core "${KEY_DIR}/secret.key"
+chmod 640 "${KEY_DIR}/secret.key"
 
 echo "[INFO] create env file"
 cat >/etc/profile.d/agent-app.sh <<'EOF'
 export AGENT_HOME=/home/agent-admin/agent-app
 export AGENT_PORT=15034
 export AGENT_UPLOAD_DIR=/home/agent-admin/agent-app/upload_files
-export AGENT_KEY_PATH=/home/agent-admin/agent-app/api_keys/t_secret.key
+export AGENT_KEY_PATH=/home/agent-admin/agent-app/api_keys/secret.key
 export AGENT_LOG_DIR=/var/log/agent-app
 EOF
 chmod 644 /etc/profile.d/agent-app.sh
@@ -182,4 +184,20 @@ echo "* * * * * /home/agent-admin/agent-app/bin/monitor.sh >> /var/log/agent-app
 crontab -u agent-admin "${TMP_CRON}"
 rm -f "${TMP_CRON}"
 
+echo "[INFO] deploy app zip from repository"
+REPO_DIR="/home/c08022220523/Codyssey"
+ZIP_PATH="$(find "${REPO_DIR}" -maxdepth 3 -type f -name 'agent-app.zip' | head -n 1 || true)"
+
+if [ -n "${ZIP_PATH}" ]; then
+  cp "${ZIP_PATH}" /home/agent-admin/agent-app.zip
+  chown agent-admin:agent-admin /home/agent-admin/agent-app.zip
+  sudo -u agent-admin unzip -o /home/agent-admin/agent-app.zip -d "${AGENT_HOME}"
+  chown -R agent-admin:agent-core "${AGENT_HOME}"
+  find "${AGENT_HOME}" -maxdepth 2 -type f -name 'agent-app-linux-*' -exec chmod 755 {} \;
+  echo "[INFO] app deployed"
+else
+  echo "[WARNING] agent-app.zip not found, skip deploy"
+fi
+
 echo "[INFO] provisioning complete"
+
