@@ -45,29 +45,18 @@
 실습 환경은 크게 두 가지 방식으로 구성했습니다.
 
 - **방법 A: OrbStack / 일반 Ubuntu VM** (권장)
-- **방법 B: Vagrant 기반 Ubuntu VM (로컬에서 자동 생성)**
+- **방법 B: Docker 컨테이너 이용**
 
 Docker 컨테이너 기반 수행 방법은 별도 문서로 분리했습니다.
 
 - [수행 방법 1 – Docker 컨테이너 이용](./docs/README.docker.md)
 - [수행 방법 2 – Vagrant 기반 Ubuntu VM](./docs/README.vagrant.md)
 
-
-### Vagrant 프로비저닝 메모
-
-Vagrant 기반 환경(`vagrant up`)에서는 아래 설정 중 상당 부분이 `scripts/provision.sh`에서 자동으로 적용됩니다.
-
-- 계정/그룹/디렉토리/권한 생성
-- SSH/방화벽(UFW) 기본 설정
-- `AGENT_*` 환경 변수 및 키 파일 경로 설정
-- `monitor.sh` 배치 및 cron 등록
-
-    따라서 Vagrant 환경에서는 VM 접속 후 `agent-admin` 계정으로 앱 실행과 Boot Sequence(“Agent READY”) 및 모니터링 결과만 검증하면 됩니다.
 ---
 
-## 방법 A. OrbStack / 일반 Ubuntu VM (권장)
+## 방법 A. OrbStack / 일반 Ubuntu VM
 
-OrbStack 또는 다른 가상화 도구(예: VirtualBox, VMware)를 이용해 **Ubuntu 22.04** 환경을 하나 준비합니다.
+OrbStack을 이용해 **Ubuntu 22.04** 환경을 하나 준비합니다.
 
 1. Ubuntu VM 생성 (예: OrbStack에서 Linux Machine 생성)
 2. VM 접속
@@ -83,6 +72,21 @@ OrbStack 또는 다른 가상화 도구(예: VirtualBox, VMware)를 이용해 **
    git clone https://github.com/0802222/Codyssey.git
    cd Codyssey
    ```
+4. provision.sh 실행
+    ```bash
+    bash scripts/provision.sh
+    ```
+5. `agent-app-linux-x86` 앱 실행
+    ```bash
+    ./agent-app-linux-x86
+    ```
+6. monitor.sh 실행 (새로운 터미널에서 orb 접속, agent-admin 권한으로 실행)
+    ```bash
+    orb
+    sudo su - agent-admin
+    cd Codyssey
+    ```
+
 
 이후의 SSH 설정, 방화벽, 계정/그룹, 디렉토리/권한, 환경 변수, 앱 실행, `monitor.sh`, `crontab` 설정 과정은 아래 섹션에서 설명하는 순서를 그대로 따르면 됩니다.
 

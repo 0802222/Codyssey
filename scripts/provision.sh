@@ -77,7 +77,7 @@ cat >/etc/profile.d/agent-app.sh <<'EOF'
 export AGENT_HOME=/home/agent-admin/agent-app
 export AGENT_PORT=15034
 export AGENT_UPLOAD_DIR=/home/agent-admin/agent-app/upload_files
-export AGENT_KEY_PATH=/home/agent-admin/agent-app/api_keys/secret.key
+export AGENT_KEY_PATH=/home/agent-admin/agent-app/api_keys
 export AGENT_LOG_DIR=/var/log/agent-app
 EOF
 chmod 644 /etc/profile.d/agent-app.sh
@@ -143,8 +143,8 @@ CPU_IDLE_LINE="$(LANG=C top -bn1 | awk '/Cpu\(s\)/ {print}')"
 CPU_IDLE="$(echo "${CPU_IDLE_LINE}" | awk -F',' '{for(i=1;i<=NF;i++){if($i ~ /id/){print $i}}}' | awk '{print $1}')"
 CPU_USAGE=$(awk "BEGIN {printf \"%.1f\", 100 - ${CPU_IDLE}}")
 
-MEM_USAGE=$(free | awk '/Mem:/ {printf \"%.1f\", $3/$2*100}')
-DISK_USED=$(df -P / | awk 'NR==2 {gsub(\"%\",\"\",$5); print $5}')
+MEM_USAGE=$(free | awk '/Mem:/ {printf "%.1f", $3/$2*100}')
+DISK_USED=$(df -P / | awk 'NR==2 {gsub("%","",$5); print $5}')
 
 echo "CPU Usage : ${CPU_USAGE}%"
 echo "MEM Usage : ${MEM_USAGE}%"
@@ -185,7 +185,7 @@ crontab -u agent-admin "${TMP_CRON}"
 rm -f "${TMP_CRON}"
 
 echo "[INFO] deploy app zip from repository"
-REPO_DIR="/home/c08022220523/Codyssey"
+REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 ZIP_PATH="$(find "${REPO_DIR}" -maxdepth 3 -type f -name 'agent-app.zip' | head -n 1 || true)"
 
 if [ -n "${ZIP_PATH}" ]; then
