@@ -20,11 +20,8 @@
 | 파일 | 용도 |
 |---|---|
 | `README.md` | 메인 안내 문서입니다. OrbStack/일반 Ubuntu VM 기준으로 미션 수행 절차와 검증 흐름을 설명합니다. |
-| `docs/README.docker.md` | Docker 컨테이너 기반으로 수행했던 기록을 별도 문서로 분리한 참고용 문서입니다. |
-| `docs/README.vagrant.md` | Vagrant 기반 Ubuntu VM 실행 방법과 자동화 구성 내용을 설명하는 문서입니다. |
-| `Vagrantfile` | Vagrant가 읽는 VM 정의 파일입니다. 사용할 Ubuntu box, 포트 포워딩, CPU/메모리, 프로비저닝 스크립트 실행을 설정합니다. |
+| `docs/README.docker.md` | 수행방법 Docker 컨테이너 기반으로 수행했던 기록을 별도 문서로 분리한 참고용 문서입니다. |
 | `scripts/provision.sh` | VM 최초 생성 시 자동 실행되는 프로비저닝 스크립트입니다. 패키지 설치, 계정/그룹, 권한, SSH, UFW, 환경 변수, `monitor.sh`, cron 설정을 자동화합니다. |
-| `/etc/profile.d/agent-app.sh` | VM 내부에서 생성되는 환경 변수 파일입니다. `AGENT_HOME`, `AGENT_PORT`, `AGENT_KEY_PATH`, `AGENT_LOG_DIR` 등을 고정합니다. |
 | `/home/agent-admin/agent-app/bin/monitor.sh` | 시스템 상태를 점검하고 로그를 남기는 과제 핵심 스크립트입니다. 프로세스/포트/리소스 점검과 경고 출력, 로그 기록을 수행합니다. |
 | `/var/log/agent-app/monitor.log` | `monitor.sh` 실행 결과가 누적 기록되는 메인 로그 파일입니다. |
 | `/var/log/agent-app/monitor.cron.log` | cron을 통해 `monitor.sh`가 실행될 때 표준 출력과 에러를 기록하는 보조 로그 파일입니다. |
@@ -44,24 +41,27 @@
 
 실습 환경은 크게 두 가지 방식으로 구성했습니다.
 
-- **방법 A: OrbStack / 일반 Ubuntu VM** (권장)
-- **방법 B: Docker 컨테이너 이용**
-
-Docker 컨테이너 기반 수행 방법은 별도 문서로 분리했습니다.
-
-- [수행 방법 1 – Docker 컨테이너 이용](./docs/README.docker.md)
-- [수행 방법 2 – Vagrant 기반 Ubuntu VM](./docs/README.vagrant.md)
+- **방법 A: OrbStack / 일반 Ubuntu VM**
+- **방법 B: Docker 컨테이너 이용** (./docs/README.docker.md 참고)
 
 ---
 
-## 방법 A. OrbStack / 일반 Ubuntu VM
+## 방법 A_OrbStack Vm 이용 (자동 실행)
 
-OrbStack을 이용해 **Ubuntu 22.04** 환경을 하나 준비합니다.
+`OrbStack`을 이용해 **Ubuntu 22.04** 환경을 하나 준비합니다.
 
-1. Ubuntu VM 생성 (예: OrbStack에서 Linux Machine 생성)
+아래 순서대로 `시스템 관제 자동화` 스크립트를 개발해 `환경 구축`, `앱 실행`, `모니터링`을 진행합니다.
+
+1. Ubuntu VM 생성
+
+    OrbStack에서 Linux Machine 생성
+    ![alt text](/docs/screenshots/b1-1_create_linux_machine.png)
 2. VM 접속
    ```bash
+   # VM 접속
    orb
+
+   # SSH 접속
    ssh ubuntu@orb
    
    # root 전환
@@ -70,12 +70,14 @@ OrbStack을 이용해 **Ubuntu 22.04** 환경을 하나 준비합니다.
 3. 프로젝트 클론
    ```bash
    git clone https://github.com/0802222/Codyssey.git
+   
    cd Codyssey
    ```
-4. provision.sh 실행
+4. 환경 구축 자동화 스크립트 `provision.sh` 실행
     ```bash
     bash scripts/provision.sh
     ```
+    ![alt text](docs/screenshots/b1-1_excuting_provision_sh.png)
 5. `agent-app-linux-x86` 앱 실행
     ```bash
     # agent-admin 전환
@@ -84,22 +86,34 @@ OrbStack을 이용해 **Ubuntu 22.04** 환경을 하나 준비합니다.
     cd agent-app
     ./agent-app-linux-x86
     ```
-6. monitor.sh 실행 (새로운 터미널에서 orb 접속)
+    ![alt text](docs/screenshots/b1-1_excuting_agent_app.png)
+6. 모니터링 스크립트 `monitor.sh` 실행 (새로운 터미널에서 orb 접속)
     ```bash
     orb
     ssu ubuntu@orb
     sudo su - agent-admin
-    
+
     cd ~/agent-app/bin
-    ./monitor.sh
+    bash monitor.sh
     ```
+    ![alt text](docs/screenshots/b1-1_system_monitor_result.png)
+
+7. 로그 확인
+    ```bash
+    cd ~/var/log/agent-app
+    cat monitor.log
+    ```
+    ![alt text](docs/screenshots/b1-1_monitoring_log.png)
 
 
-이후의 SSH 설정, 방화벽, 계정/그룹, 디렉토리/권한, 환경 변수, 앱 실행, `monitor.sh`, `crontab` 설정 과정은 아래 섹션에서 설명하는 순서를 그대로 따르면 됩니다.
-
-> 컨테이너 기반 상세 수행 로그는 `docs/README.docker.md`에 남겨 두었습니다. 같은 명령을 VM 환경에서 실행하면 됩니다.
 
 ---
+<br>
+<br>
+
+## 방법 A_상세 절차 (수동 실행)
+SSH 설정, 방화벽, 계정/그룹, 디렉토리/권한, 환경 변수, 앱 실행, `monitor.sh`, `crontab` 수동 설정 과정입니다.
+
 ## 0. 의존성 설치
 - 패키지 설치 - `apt`
     
@@ -1070,10 +1084,4 @@ tail /var/log/agent-app/monitor.log
 ![alt text](docs/screenshots/b1-1_cron%20매분%20간격%20tail%20-n.png)
 <br>
 <br>
-
-
-
-## 참고: 다른 실행 방법
-
-- [Docker 컨테이너 기반 수행 방법](./docs/README.docker.md)
-- [Vagrant로 Ubuntu VM 자동 생성 및 프로비저닝](./docs/README.vagrant.md)
+.EOD

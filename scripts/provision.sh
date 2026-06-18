@@ -154,25 +154,38 @@ if ! ss -tuln | grep -q ":$APP_PORT "; then
   exit 1
 fi
 
-# 2. 경고 체크 - 방화벽 활성화 여부
+# 3. 경고 체크 - 방화벽 활성화 여부
 FIREWALL_WARNING=""
+FIREWALL_STATUS="unknown"
 
 if command -v ufw >/dev/null 2>&1; then
-  UFW_STATUS="$(/usr/sbin/ufw status 2>&1 || true)"
+  UFW_STATUS="$(sudo /usr/sbin/ufw status 2>&1 || true)"
 
   if echo "$UFW_STATUS" | grep -q "Status: active"; then
-    :
-  elif echo "$UFW_STATUS" | grep -q "You need to be root"; then
-    FIREWALL_WARNING="[INFO] UFW status check skipped (root required)"
+    FIREWALL_STATUS="active"
+  elif echo "$UFW_STATUS" | grep -qi "sudo"; then
+    FIREWALL_STATUS="permission denied"
+    FIREWALL_WARNING="[INFO] UFW status check failed (sudo permission required)"
   else
+    FIREWALL_STATUS="inactive"
     FIREWALL_WARNING="[WARNING] UFW is inactive"
   fi
 
 elif command -v firewall-cmd >/dev/null 2>&1; then
-  if ! firewall-cmd --state 2>/dev/null | grep -q "running"; then
+  FWD_STATUS="$(sudo firewall-cmd --state 2>&1 || true)"
+
+  if echo "$FWD_STATUS" | grep -q "running"; then
+    FIREWALL_STATUS="active"
+  elif echo "$FWD_STATUS" | grep -qi "sudo"; then
+    FIREWALL_STATUS="permission denied"
+    FIREWALL_WARNING="[INFO] firewalld status check failed (sudo permission required)"
+  else
+    FIREWALL_STATUS="inactive"
     FIREWALL_WARNING="[WARNING] firewalld is inactive"
   fi
+
 else
+  FIREWALL_STATUS="not found"
   FIREWALL_WARNING="[WARNING] No firewall tool detected"
 fi
 
@@ -237,6 +250,8 @@ echo "[RESOURCE MONITORING]"
 echo "CPU Usage : ${CPU_USAGE}%"
 echo "MEM Usage : ${MEM_USAGE}%"
 echo "DISK Used : ${DISK_USAGE}%"
+echo
+echo "Firewall : ${FIREWALL_STATUS}"
 echo
 
 if [ -n "$FIREWALL_WARNING" ]; then
