@@ -22,12 +22,14 @@ apt-get install -y \
   curl \
   unzip \
   python3 \
-  python3-pip
+  python3-pip \
+  git
 
 echo "[INFO] ensure cron enabled"
 systemctl enable cron
 systemctl restart cron
 
+# 사용자, 그룹, 디렉터리, 권한 설정
 echo "[INFO] create groups"
 getent group agent-common >/dev/null || groupadd agent-common
 getent group agent-core   >/dev/null || groupadd agent-core
@@ -82,6 +84,7 @@ export AGENT_LOG_DIR=/var/log/agent-app
 EOF
 chmod 644 /etc/profile.d/agent-app.sh
 
+# SSH, 방화벽, 모니터링
 echo "[INFO] configure sshd (Port 20022, no root login)"
 SSHD_CONFIG="/etc/ssh/sshd_config"
 
@@ -111,71 +114,147 @@ echo "[INFO] create monitor.sh template (if not exists)"
 if [ ! -f "${BIN_DIR}/monitor.sh" ]; then
   cat > "${BIN_DIR}/monitor.sh" <<'EOF'
 #!/usr/bin/env bash
+
 set -euo pipefail
 
-LOG_DIR="${AGENT_LOG_DIR:-/var/log/agent-app}"
-LOG_FILE="${LOG_DIR}/monitor.log"
+AGENT_HOME="${AGENT_HOME:-/home/agent-admin/agent-app}"
+AGENT_LOG_DIR="${AGENT_LOG_DIR:-/var/log/agent-app}"
+LOG_FILE="${AGENT_LOG_DIR}/monitor.log"
+APP_NAME="agent-app-linux-x86"
 APP_PORT="${AGENT_PORT:-15034}"
-APP_PROC="agent-app-linux-x86"
 
-mkdir -p "${LOG_DIR}"
+CPU_THRESHOLD=20
+MEM_THRESHOLD=10
+DISK_THRESHOLD=80
 
-echo "====== SYSTEM MONITOR RESULT ======"
+MAX_SIZE=$((10 * 1024 * 1024))  # 10MB
+MAX_FILES=10
 
-echo
-echo "[HEALTH CHECK]"
-PID="$(pgrep -f "${APP_PROC}" | head -n 1 || true)"
-if [ -z "${PID}" ]; then
-  echo "[ERROR] ${APP_PROC} process not found"
+
+timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
+
+mkdir -p "${AGENT_LOG_DIR}"
+
+# 1. 헬스 체크 - 프로세스
+APP_PID="$(pgrep -f "${APP_NAME}" | head -n 1 || true)"
+if [ -z "${APP_PID:-}" ]; then
+  echo "====== SYSTEM MONITOR RESULT ======"
+  echo
+  echo "[HEALTH CHECK]"
+  echo "[ERROR] Process '${APP_NAME}' not running"
   exit 1
 fi
-echo "Checking process '${APP_PROC}'... [OK] (PID: ${PID})"
 
-if ! ss -tuln | grep -q ":${APP_PORT} "; then
-  echo "[ERROR] port ${APP_PORT} not listening"
+# 2. 헬스 체크 - 포트
+if ! ss -tuln | grep -q ":$APP_PORT "; then
+  echo "====== SYSTEM MONITOR RESULT ======"
+  echo
+  echo "[HEALTH CHECK]"
+  echo "[ERROR] Port ${APP_PORT} is not listening"
   exit 1
 fi
-echo "Checking port ${APP_PORT}... [OK]"
 
-echo
-echo "[RESOURCE MONITORING]"
+# 2. 경고 체크 - 방화벽 활성화 여부
+FIREWALL_WARNING=""
+
+if command -v ufw >/dev/null 2>&1; then
+  UFW_STATUS="$(/usr/sbin/ufw status 2>&1 || true)"
+
+  if echo "$UFW_STATUS" | grep -q "Status: active"; then
+    :
+  elif echo "$UFW_STATUS" | grep -q "You need to be root"; then
+    FIREWALL_WARNING="[INFO] UFW status check skipped (root required)"
+  else
+    FIREWALL_WARNING="[WARNING] UFW is inactive"
+  fi
+
+elif command -v firewall-cmd >/dev/null 2>&1; then
+  if ! firewall-cmd --state 2>/dev/null | grep -q "running"; then
+    FIREWALL_WARNING="[WARNING] firewalld is inactive"
+  fi
+else
+  FIREWALL_WARNING="[WARNING] No firewall tool detected"
+fi
+
+# 4. 자원 수집 - CPU 사용률
 CPU_IDLE_LINE="$(LANG=C top -bn1 | awk '/Cpu\(s\)/ {print}')"
 CPU_IDLE="$(echo "${CPU_IDLE_LINE}" | awk -F',' '{for(i=1;i<=NF;i++){if($i ~ /id/){print $i}}}' | awk '{print $1}')"
-CPU_USAGE=$(awk "BEGIN {printf \"%.1f\", 100 - ${CPU_IDLE}}")
+CPU_USAGE="$(awk "BEGIN {printf \"%.1f\", 100 - ${CPU_IDLE}}")"
 
-MEM_USAGE=$(free | awk '/Mem:/ {printf "%.1f", $3/$2*100}')
-DISK_USED=$(df -P / | awk 'NR==2 {gsub("%","",$5); print $5}')
+# 4. 자원 수집 - 메모리 사용률
+MEM_USAGE="$(free | awk '/Mem:/ {printf "%.1f", $3/$2*100}')"
 
+# 4. 자원 수집 - 디스크 사용률 (/ 기준)
+DISK_USAGE="$(df -P / | awk 'NR==2 {gsub("%","",$5); print $5}')"
+
+# 5. 임계값 경고
+RESOURCE_WARNINGS=""
+
+if awk "BEGIN {exit !(${CPU_USAGE} > ${CPU_THRESHOLD})}"; then
+  RESOURCE_WARNINGS="${RESOURCE_WARNINGS}[WARNING] CPU threshold exceeded (${CPU_USAGE}% > ${CPU_THRESHOLD}%)\n"
+fi
+
+if awk "BEGIN {exit !(${MEM_USAGE} > ${MEM_THRESHOLD})}"; then
+  RESOURCE_WARNINGS="${RESOURCE_WARNINGS}[WARNING] MEM threshold exceeded (${MEM_USAGE}% > ${MEM_THRESHOLD}%)\n"
+fi
+
+if awk "BEGIN {exit !(${DISK_USAGE} > ${DISK_THRESHOLD})}"; then
+  RESOURCE_WARNINGS="${RESOURCE_WARNINGS}[WARNING] DISK threshold exceeded (${DISK_USAGE}% > ${DISK_THRESHOLD}%)\n"
+fi
+
+# 6. 로그 기록
+printf '[%s] PID:%s CPU:%s%% MEM:%s%% DISK_USED:%s%%\n' \
+  "${timestamp}" "${APP_PID}" "${CPU_USAGE}" "${MEM_USAGE}" "${DISK_USAGE}" >> "${LOG_FILE}"
+
+# 7. 로그 롤링 (최대 10MB / 10개 파일 유지)
+
+if [ -f "${LOG_FILE}" ]; then
+  CURRENT_SIZE="$(stat -c%s "${LOG_FILE}")"
+  if [ "${CURRENT_SIZE}" -gt "${MAX_SIZE}" ]; then
+    TS="$(date '+%Y%m%d%H%M%S')"
+    mv "${LOG_FILE}" "${AGENT_LOG_DIR}/monitor.log.${TS}"
+    touch "${LOG_FILE}"
+  fi
+fi
+
+mapfile -t LOG_ROLLED_FILES < <(ls -1t "${AGENT_LOG_DIR}"/monitor.log.* 2>/dev/null || true)
+COUNT="${#LOG_ROLLED_FILES[@]}"
+
+if [ "${COUNT}" -gt "${MAX_FILES}" ]; then
+  for ((i=MAX_FILES; i<COUNT; i++)); do
+    rm -f "${LOG_ROLLED_FILES[$i]}"
+  done
+fi
+
+# 8. 콘솔 출력
+echo "====== SYSTEM MONITOR RESULT ======"
+echo
+echo "[HEALTH CHECK]"
+echo "Checking process '${APP_NAME}'... [OK] (PID: ${APP_PID})"
+echo "Checking port ${APP_PORT}... [OK]"
+echo
+echo "[RESOURCE MONITORING]"
 echo "CPU Usage : ${CPU_USAGE}%"
 echo "MEM Usage : ${MEM_USAGE}%"
-echo "DISK Used : ${DISK_USED}%"
+echo "DISK Used : ${DISK_USAGE}%"
+echo
 
-if ! ufw status | grep -q "Status: active"; then
-  echo
-  echo "[WARNING] UFW is inactive"
-fi
-
-if awk "BEGIN {exit !(${CPU_USAGE} > 20)}"; then
-  echo "[WARNING] CPU threshold exceeded (${CPU_USAGE}% > 20%)"
-fi
-if awk "BEGIN {exit !(${MEM_USAGE} > 10)}"; then
-  echo "[WARNING] MEM threshold exceeded (${MEM_USAGE}% > 10%)"
-fi
-if awk "BEGIN {exit !(${DISK_USED} > 80)}"; then
-  echo "[WARNING] DISK threshold exceeded (${DISK_USED}% > 80%)"
+if [ -n "$FIREWALL_WARNING" ]; then
+  echo "$FIREWALL_WARNING"
 fi
 
-mkdir -p "${LOG_DIR}"
-printf "[%s] PID:%s CPU:%.1f%% MEM:%s%% DISK_USED:%s%%\n" \
-  "$(date '+%F %T')" "${PID}" "${CPU_USAGE}" "${MEM_USAGE}" "${DISK_USED}" >> "${LOG_FILE}"
+if [ -n "$RESOURCE_WARNINGS" ]; then
+  printf "%b" "$RESOURCE_WARNINGS"
+fi
 
 echo
-echo "[INFO] Log appended: ${LOG_FILE}"
+echo "[INFO] Log appended: $LOG_FILE"
 EOF
+  chown agent-dev:agent-core "${BIN_DIR}/monitor.sh"
+  chmod 750 "${BIN_DIR}/monitor.sh"
 fi
 
-chown agent-dev:agent-core "${BIN_DIR}/monitor.sh"
-chmod 750 "${BIN_DIR}/monitor.sh"
+
 
 echo "[INFO] register cron for agent-admin"
 TMP_CRON="$(mktemp)"
@@ -184,6 +263,7 @@ echo "* * * * * /home/agent-admin/agent-app/bin/monitor.sh >> /var/log/agent-app
 crontab -u agent-admin "${TMP_CRON}"
 rm -f "${TMP_CRON}"
 
+# agent-app.zip 배포와 압축해제
 echo "[INFO] deploy app zip from repository"
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 ZIP_PATH="$(find "${REPO_DIR}" -maxdepth 3 -type f -name 'agent-app.zip' | head -n 1 || true)"

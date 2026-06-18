@@ -61,7 +61,7 @@ OrbStack을 이용해 **Ubuntu 22.04** 환경을 하나 준비합니다.
 1. Ubuntu VM 생성 (예: OrbStack에서 Linux Machine 생성)
 2. VM 접속
    ```bash
-   orb           # OrbStack CLI 사용 시
+   orb
    ssh ubuntu@orb
    
    # root 전환
@@ -78,13 +78,20 @@ OrbStack을 이용해 **Ubuntu 22.04** 환경을 하나 준비합니다.
     ```
 5. `agent-app-linux-x86` 앱 실행
     ```bash
+    # agent-admin 전환
+    sudo su - agent-admin
+
+    cd agent-app
     ./agent-app-linux-x86
     ```
-6. monitor.sh 실행 (새로운 터미널에서 orb 접속, agent-admin 권한으로 실행)
+6. monitor.sh 실행 (새로운 터미널에서 orb 접속)
     ```bash
     orb
+    ssu ubuntu@orb
     sudo su - agent-admin
-    cd Codyssey
+    
+    cd ~/agent-app/bin
+    ./monitor.sh
     ```
 
 
