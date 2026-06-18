@@ -27,7 +27,7 @@ if [ -z "${APP_PID:-}" ]; then
   echo
   echo "[HEALTH CHECK]"
   echo "[ERROR] Process '${APP_NAME}' not running"
-  exit 1
+  exit 1 # 프로세스 없음
 fi
 
 # 2. 헬스 체크 - 포트
@@ -36,7 +36,7 @@ if ! ss -tuln | grep -q ":$APP_PORT "; then
   echo
   echo "[HEALTH CHECK]"
   echo "[ERROR] Port ${APP_PORT} is not listening"
-  exit 1
+  exit 2 # 포트 안열림
 fi
 
 # 3. 경고 체크 - 방화벽 활성화 여부

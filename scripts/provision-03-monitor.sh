@@ -46,7 +46,7 @@ if ! ss -tuln | grep -q ":$APP_PORT "; then
   echo
   echo "[HEALTH CHECK]"
   echo "[ERROR] Port ${APP_PORT} is not listening"
-  exit 1
+  exit 2
 fi
 
 # 3. 경고 체크 - 방화벽 활성화 여부
