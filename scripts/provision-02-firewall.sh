@@ -5,14 +5,17 @@ set -euo pipefail
 # apt 비대화모드 + 기본  패키지 설치
 export DEBIAN_FRONTEND=noninteractive
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/common.sh"
+
 # SSH, 방화벽
-echo "[INFO] configure sshd (Port 20022, no root login)"
+log_info "configure sshd (Port ${SSH_PORT}, no root login)"
 SSHD_CONFIG="/etc/ssh/sshd_config"
 
 if grep -qE '^[#]*Port ' "${SSHD_CONFIG}"; then
-  sed -i 's/^[#]*Port .*/Port 20022/' "${SSHD_CONFIG}"
+  sed -i "s/^[#]*Port .*/Port ${SSH_PORT}/" "${SSHD_CONFIG}"
 else
-  echo "Port 20022" >> "${SSHD_CONFIG}"
+  echo "Port ${SSH_PORT}" >> "${SSHD_CONFIG}"
 fi
 
 if grep -qE '^[#]*PermitRootLogin ' "${SSHD_CONFIG}"; then
@@ -21,12 +24,16 @@ else
   echo "PermitRootLogin no" >> "${SSHD_CONFIG}"
 fi
 
+# ssh 재시작 전 문법체크
+sshd -t
+
+# ssh 재시작
 systemctl restart ssh || systemctl restart sshd
 
-echo "[INFO] configure UFW"
+log_info "configure UFW"
 ufw --force reset
 ufw default deny incoming
 ufw default allow outgoing
-ufw allow 20022/tcp
-ufw allow 15034/tcp
+ufw allow "${SSH_PORT}/tcp"
+ufw allow "${APP_PORT}/tcp"
 ufw --force enable

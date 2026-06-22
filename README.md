@@ -74,6 +74,10 @@
    cd Codyssey
    ```
 4. 환경 구축 자동화 스크립트 `provision.sh` 실행
+    - provision-01-users.sh
+    - provision-01-firewall.sh
+    - provision-03-monitor.sh
+    - provision-04-deploy-app.sh
     ```bash
     bash scripts/provision.sh
     ```

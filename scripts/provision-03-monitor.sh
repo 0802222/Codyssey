@@ -5,7 +5,13 @@ set -euo pipefail
 # apt 비대화모드 + 기본  패키지 설치
 export DEBIAN_FRONTEND=noninteractive
 
-echo "[INFO] create monitor.sh template (if not exists)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/common.sh"
+
+mkdir -p "${BIN_DIR}"
+mkdir -p "${AGENT_LOG_DIR}"
+
+log_info "create monitor.sh template (if not exists)"
 if [ ! -f "${BIN_DIR}/monitor.sh" ]; then
   cat > "${BIN_DIR}/monitor.sh" <<'EOF'
 #!/usr/bin/env bash
@@ -14,9 +20,9 @@ set -euo pipefail
 
 AGENT_HOME="${AGENT_HOME:-/home/agent-admin/agent-app}"
 AGENT_LOG_DIR="${AGENT_LOG_DIR:-/var/log/agent-app}"
-LOG_FILE="${AGENT_LOG_DIR}/monitor.log"
-APP_NAME="agent-app-linux-x86"
-APP_PORT="${AGENT_PORT:-15034}"
+LOG_FILE="${LOG_FILE:-${AGENT_LOG_DIR}/monitor.log}"
+APP_NAME="${APP_NAME:-agent-app-linux-x86}"
+APP_PORT="${APP_PORT:-15034}"
 
 CPU_THRESHOLD=20
 MEM_THRESHOLD=10
@@ -41,13 +47,14 @@ if [ -z "${APP_PID:-}" ]; then
 fi
 
 # 2. 헬스 체크 - 포트
-if ! ss -tuln | grep -q ":$APP_PORT "; then
+if ! ss -ltn | grep -q ":${APP_PORT} "; then
   echo "====== SYSTEM MONITOR RESULT ======"
   echo
   echo "[HEALTH CHECK]"
   echo "[ERROR] Port ${APP_PORT} is not listening"
   exit 2
 fi
+
 
 # 3. 경고 체크 - 방화벽 활성화 여부
 FIREWALL_WARNING=""
@@ -110,12 +117,7 @@ if awk "BEGIN {exit !(${DISK_USAGE} > ${DISK_THRESHOLD})}"; then
   RESOURCE_WARNINGS="${RESOURCE_WARNINGS}[WARNING] DISK threshold exceeded (${DISK_USAGE}% > ${DISK_THRESHOLD}%)\n"
 fi
 
-# 6. 로그 기록
-printf '[%s] PID:%s CPU:%s%% MEM:%s%% DISK_USED:%s%%\n' \
-  "${timestamp}" "${APP_PID}" "${CPU_USAGE}" "${MEM_USAGE}" "${DISK_USAGE}" >> "${LOG_FILE}"
-
-# 7. 로그 롤링 (최대 10MB / 10개 파일 유지)
-
+# 6. 로그 롤링 (최대 10MB / 10개 파일 유지)
 if [ -f "${LOG_FILE}" ]; then
   CURRENT_SIZE="$(stat -c%s "${LOG_FILE}")"
   if [ "${CURRENT_SIZE}" -gt "${MAX_SIZE}" ]; then
@@ -124,6 +126,10 @@ if [ -f "${LOG_FILE}" ]; then
     touch "${LOG_FILE}"
   fi
 fi
+
+# 7. 로그 기록
+printf '[%s] PID:%s CPU:%s%% MEM:%s%% DISK_USED:%s%%\n' \
+  "${timestamp}" "${APP_PID}" "${CPU_USAGE}" "${MEM_USAGE}" "${DISK_USAGE}" >> "${LOG_FILE}"
 
 mapfile -t LOG_ROLLED_FILES < <(ls -1t "${AGENT_LOG_DIR}"/monitor.log.* 2>/dev/null || true)
 COUNT="${#LOG_ROLLED_FILES[@]}"
@@ -160,14 +166,14 @@ fi
 echo
 echo "[INFO] Log appended: $LOG_FILE"
 EOF
-  chown agent-dev:agent-core "${BIN_DIR}/monitor.sh"
+  chown "${AGENT_USER}:${AGENT_CORE_GROUP}" "${BIN_DIR}/monitor.sh"
   chmod 750 "${BIN_DIR}/monitor.sh"
 fi
 
 
-echo "[INFO] register cron for agent-admin"
+log_info "register cron for ${AGENT_USER}"
 TMP_CRON="$(mktemp)"
-crontab -u agent-admin -l 2>/dev/null | grep -v 'monitor.sh' > "${TMP_CRON}" || true
-echo "* * * * * /home/agent-admin/agent-app/bin/monitor.sh >> /var/log/agent-app/monitor.cron.log 2>&1" >> "${TMP_CRON}"
-crontab -u agent-admin "${TMP_CRON}"
+crontab -u "${AGENT_USER}" -l 2>/dev/null | grep -v 'monitor.sh' > "${TMP_CRON}" || true
+echo "* * * * * ${BIN_DIR}/monitor.sh >> /var/log/agent-app/monitor.cron.log 2>&1" >> "${TMP_CRON}"
+crontab -u "${AGENT_USER}" "${TMP_CRON}"
 rm -f "${TMP_CRON}"
