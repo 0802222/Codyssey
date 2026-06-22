@@ -104,8 +104,8 @@
 
 7. 로그 확인
     ```bash
-    cd ~/var/log/agent-app
-    cat monitor.log
+    cd /var/log/agent-app
+    tail -f monitor.log
     ```
     ![alt text](docs/screenshots/b1-1_monitoring_log.png)
 
@@ -969,11 +969,7 @@ tcp   LISTEN 0      1            0.0.0.0:15034      0.0.0.0:*    users:(("agent-
     visudo
 
     # User privilege 에 agent-admin 이 ufw status 를 확인 할 수 있도록 추가
-
-    # User privilege specification
-    root    ALL=(ALL:ALL) ALL
-    
-    agent-admin ALL=(ALL) NOPASSWD: /usr/sbin/ufw status, /usr/sbin/ufw status verbose
+    agent-admin ALL=(ALL) NOPASSWD: /usr/sbin/ufw status
     ```
 
 - 방화벽 활성화 완료

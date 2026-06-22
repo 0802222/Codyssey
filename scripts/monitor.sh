@@ -4,9 +4,9 @@ set -euo pipefail
 
 AGENT_HOME="${AGENT_HOME:-/home/agent-admin/agent-app}"
 AGENT_LOG_DIR="${AGENT_LOG_DIR:-/var/log/agent-app}"
-LOG_FILE="${AGENT_LOG_DIR}/monitor.log"
-APP_NAME="agent-app-linux-x86"
-APP_PORT="${AGENT_PORT:-15034}"
+LOG_FILE="${LOG_FILE:-${AGENT_LOG_DIR}/monitor.log}"
+APP_NAME="${APP_NAME:-agent-app-linux-x86}"
+APP_PORT="${APP_PORT:-15034}"
 
 CPU_THRESHOLD=20
 MEM_THRESHOLD=10
@@ -27,17 +27,18 @@ if [ -z "${APP_PID:-}" ]; then
   echo
   echo "[HEALTH CHECK]"
   echo "[ERROR] Process '${APP_NAME}' not running"
-  exit 1 # 프로세스 없음
+  exit 1
 fi
 
 # 2. 헬스 체크 - 포트
-if ! ss -tuln | grep -q ":$APP_PORT "; then
+if ! ss -ltn | grep -q ":${APP_PORT} "; then
   echo "====== SYSTEM MONITOR RESULT ======"
   echo
   echo "[HEALTH CHECK]"
   echo "[ERROR] Port ${APP_PORT} is not listening"
-  exit 2 # 포트 안열림
+  exit 2
 fi
+
 
 # 3. 경고 체크 - 방화벽 활성화 여부
 FIREWALL_WARNING=""
@@ -100,12 +101,7 @@ if awk "BEGIN {exit !(${DISK_USAGE} > ${DISK_THRESHOLD})}"; then
   RESOURCE_WARNINGS="${RESOURCE_WARNINGS}[WARNING] DISK threshold exceeded (${DISK_USAGE}% > ${DISK_THRESHOLD}%)\n"
 fi
 
-# 6. 로그 기록
-printf '[%s] PID:%s CPU:%s%% MEM:%s%% DISK_USED:%s%%\n' \
-  "${timestamp}" "${APP_PID}" "${CPU_USAGE}" "${MEM_USAGE}" "${DISK_USAGE}" >> "${LOG_FILE}"
-
-# 7. 로그 롤링 (최대 10MB / 10개 파일 유지)
-
+# 6. 로그 롤링 (최대 10MB / 10개 파일 유지)
 if [ -f "${LOG_FILE}" ]; then
   CURRENT_SIZE="$(stat -c%s "${LOG_FILE}")"
   if [ "${CURRENT_SIZE}" -gt "${MAX_SIZE}" ]; then
@@ -114,6 +110,10 @@ if [ -f "${LOG_FILE}" ]; then
     touch "${LOG_FILE}"
   fi
 fi
+
+# 7. 로그 기록
+printf '[%s] PID:%s CPU:%s%% MEM:%s%% DISK_USED:%s%%\n' \
+  "${timestamp}" "${APP_PID}" "${CPU_USAGE}" "${MEM_USAGE}" "${DISK_USAGE}" >> "${LOG_FILE}"
 
 mapfile -t LOG_ROLLED_FILES < <(ls -1t "${AGENT_LOG_DIR}"/monitor.log.* 2>/dev/null || true)
 COUNT="${#LOG_ROLLED_FILES[@]}"
